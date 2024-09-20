@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サービス職適性診断 - あなたに最適なサービス職種を見つけよう！</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        form {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #result h2, #detailSection h3 {
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        #jobTypeDetail {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #detailContent ul {
+            padding-left: 20px;
+        }
+        #radarChart {
+            max-width: 500px;
+            margin: 30px auto;
+        }
+        #printButton {
+            margin-top: 20px;
+            background-color: #2ecc71;
+        }
+        #printButton:hover {
+            background-color: #27ae60;
+        }
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            .container {
+                width: 100%;
+                max-width: none;
+                padding: 0;
+            }
+            form, #printButton {
+                box-shadow: none;
+            }
+            #result, #detailSection {
+                box-shadow: none;
+            }
+            button[type="submit"] {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>サービス職適性診断</h1>
+        <form id="serviceAptitudeForm">
+            <div class="question">
+                <label for="q1">1. コミュニケーション能力</label>
+                <select id="q1" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q2">2. 共感力</label>
+                <select id="q2" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q3">3. 忍耐力</label>
+                <select id="q3" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q4">4. 臨機応変さ</label>
+                <select id="q4" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q5">5. 注意力</label>
+                <select id="q5" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q6">6. チームワーク</label>
+                <select id="q6" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q7">7. 問題解決能力</label>
+                <select id="q7" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q8">8. 身だしなみへの注意</label>
+                <select id="q8" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q9">9. 柔軟性</label>
+                <select id="q9" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q10">10. ストレス耐性</label>
+                <select id="q10" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q11">11. 責任感</label>
+                <select id="q11" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q12">12. 記憶力</label>
+                <select id="q12" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q13">13. 体力</label>
+                <select id="q13" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q14">14. 創造性</label>
+                <select id="q14" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q15">15. 自己管理能力</label>
+                <select id="q15" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <button type="submit">診断結果を見る</button>
+        </form>
+        <div id="result"></div>
+        <div id="radarChart">
+            <canvas id="skillChart"></canvas>
+        </div>
+        <div id="detailSection" style="display:none;">
+            <h3>選択したサービス職種の詳細:</h3>
+            <select id="jobTypeDetail"></select>
+            <div id="detailContent"></div>
+        </div>
+        <button id="printButton">結果を印刷する</button>
+    </div>
+
+    <script>
+        const serviceJobTypes = {
+            "ホテルフロントスタッフ": {
+                weights: {"1": 5, "2": 4, "4": 4, "8": 5, "12": 4},
+                description: "ホテルの顔として、チェックインやチェックアウト、問い合わせ対応など、宿泊客へのサービスを提供します。高いコミュニケーション能力と臨機応変な対応が求められます。",
+                details: [
+                    "チェックイン・チェックアウト手続き",
+                    "宿泊予約の管理",
+                    "館内施設の案内",
+                    "苦情対応と問題解決",
+                    "他部署との連携"
+                ]
+            },
+            "レストラン接客係": {
+                weights: {"1": 5, "2": 4, "5": 4, "8": 4, "13": 4},
+                description: "レストランで顧客を迎え、注文を取り、料理を提供します。丁寧な接客とスムーズなサービス提供が重要です。",
+                details: [
+                    "お客様の案内とオーダー取り",
+                    "料理とドリンクの提供",
+                    "テーブルのセッティングと片付け",
+                    "メニューの説明と推奨",
+                    "レジ操作と会計"
+                ]
+            },
+            "美容師": {
+                weights: {"1": 4, "2": 4, "9": 4, "14": 5, "8": 4},
+                description: "ヘアカットや染髪、パーマなどの施術を行います。技術力に加え、顧客の要望を理解し、適切な提案ができる能力が必要です。",
+                details: [
+                    "カウンセリングと施術プランの提案",
+                    "ヘアカット、カラーリング、パーマの施術",
+                    "ヘアケア製品の説明と販売",
+                    "衛生管理と器具のメンテナンス",
+                    "新しい技術やトレンドの習得"
+                ]
+            },
+            "旅行代理店スタッフ": {
+                weights: {"1": 5, "7": 4, "9": 4, "12": 4, "14": 3},
+                description: "旅行プランの提案や手配を行います。幅広い知識と顧客のニーズに合わせた柔軟な対応が求められます。",
+                details: [
+                    "旅行プランの提案と見積もり作成",
+                    "航空券、ホテル、観光ツアーの予約",
+                    "旅行保険や必要書類の説明と手配",
+                    "旅行先の情報提供とアドバイス",
+                    "緊急時の対応とサポート"
+                ]
+            },
+            "カスタマーサポート担当": {
+                weights: {"1": 5, "2": 5, "3": 4, "7": 4, "10": 4},
+                description: "電話やメール、チャットを通じて顧客の問い合わせや苦情に対応します。高いコミュニケーション能力と問題解決能力が必要です。",
+                details: [
+                    "顧客からの問い合わせ対応",
+                    "製品やサービスの説明と技術サポート",
+                    "苦情処理と問題解決",
+                    "顧客情報の管理と更新",
+                    "社内関連部署との連携"
+                ]
+            },
+            "フライトアテンダント": {
+                weights: {"1": 5, "5": 5, "8": 5, "10": 4, "13": 4},
+                description: "航空機内で乗客の安全と快適さを確保します。緊急時の対応能力と高いホスピタリティが求められます。",
+                details: [
+                    "機内安全手順の説明と実施",
+                    "機内食・飲料サービスの提供",
+                    "乗客の快適性確保と要望対応",
+                    "緊急時の対応と避難誘導",
+                    "搭乗前の準備と搭乗後の機内清掃"
+                ]
+            },
+            "介護士": {
+                weights: {"2": 5, "3": 5, "6": 4, "11": 5, "13": 4},
+                description: "高齢者や障害者の日常生活をサポートします。深い共感力と忍耐力、そして高い責任感が必要です。",
+                details: [
+                    "食事、入浴、排泄の介助",
+                    "服薬管理と健康状態の観察",
+                    "リハビリテーションの補助",
+                    "生活環境の整備と清掃",
+                    "家族とのコミュニケーションと報告"
+                ]
+            },
+            "保育士": {
+                weights: {"2": 5, "4": 4, "6": 4, "11": 5, "14": 4},
+                description: "乳幼児の保育と教育を行います。子どもへの深い理解と創造的な活動の企画能力が求められます。",
+                details: [
+                    "日常的な保育業務（食事、睡眠、排泄の世話）",
+                    "教育的活動の企画と実施",
+                    "子どもの発達観察と記録",
+                    "保護者とのコミュニケーション",
+                    "安全管理と緊急時対応"
+                ]
+            },
+            "エステティシャン": {
+                weights: {"1": 4, "2": 4, "8": 5, "9": 4, "14": 3},
+                description: "美容や健康に関するサービスを提供します。技術力に加え、顧客の要望を理解し適切なケアを提案する能力が必要です。",
+                details: [
+                    "カウンセリングと施術プランの提案",
+                    "フェイシャル、ボディトリートメントの施術",
+                    "美容製品の説明と販売",
+                    "衛生管理と器具のメンテナンス",
+                    "新しい技術やトレンドの習得"
+                ]
+            },
+            "ウェディングプランナー": {
+                weights: {"1": 5, "4": 5, "7": 4, "9": 4, "14": 5},
+                description: "結婚式の企画や運営を行います。顧客の希望を実現するための創造力と緻密な計画能力が求められます。",
+                details: [
+                    "カップルとの打ち合わせと希望の聞き取り",
+                    "結婚式と披露宴の企画立案",
+                    "会場やサプライヤーとの交渉と手配",
+                    "当日のスケジュール管理と進行",
+                    "予算管理と見積もり作成"
+                ]
+            },
+            "不動産仲介業者": {
+                weights: {"1": 5, "4": 4, "7": 4, "9": 4, "11": 5},
+                description: "物件の売買や賃貸の仲介を行います。不動産に関する幅広い知識と、顧客のニーズを理解する能力が必要です。",
+                details: [
+                    "物件情報の収集と管理",
+                    "顧客のニーズヒアリングと物件提案",
+                    "物件案内と契約交渉",
+                    "契約書類の作成と説明",
+                    "アフターフォローと顧客管理"
+                ]
+            },
+            "カーディーラー営業": {
+                weights: {"1": 5, "4": 4, "7": 4, "9": 3, "12": 4},
+                description: "自動車の販売と関連サービスの提供を行います。製品知識と顧客のニーズに合わせた提案能力が求められます。",
+                details: [
+                    "顧客のニーズヒアリングと車種提案",
+                    "試乗の案内と製品説明",
+                    "見積もり作成と価格交渉",
+                    "購入手続きと納車対応",
+                    "アフターサービスの案内と顧客フォロー"
+                ]
+            },
+            "イベントプランナー": {
+                weights: {"1": 4, "4": 5, "6": 5, "7": 4, "14": 5},
+                description: "各種イベントの企画や運営を行います。創造力とチームワーク、そして細部まで気を配る能力が必要です。",
+                details: [
+                    "クライアントとの打ち合わせとニーズ把握",
+                    "イベントの企画立案と予算管理",
+                    "会場やサプライヤーの選定と交渉",
+                    "当日の運営管理とスタッフ統括",
+                    "イベント後の評価と報告"
+                ]
+            },
+            "ジムインストラクター": {
+                weights: {"1": 4, "2": 4, "6": 4, "13": 5, "15": 4},
+                description: "フィットネスクラブで会員の運動指導を行います。専門知識と motivational な指導能力が求められます。",
+                details: [
+                    "会員の健康状態と目標の把握",
+                    "個別のトレーニングプログラム作成",
+                    "エクササイズの指導とフォームチェック",
+                    "栄養アドバイスの提供",
+                    "施設や器具の管理と安全確認"
+                ]
+            },
+            "ソーシャルワーカー": {
+                weights: {"2": 5, "3": 4, "7": 5, "9": 4, "11": 5},
+                description: "社会福祉に関する支援を行います。深い共感力と問題解決能力、そして高い責任感が必要です。",
+                details: [
+                    "クライアントの状況評価とニーズ分析",
+                    "支援計画の立案と実施",
+                    "関係機関との連携とリソースの活用",
+                    "カウンセリングと精神的サポート",
+                    "ケース記録の作成と管理"
+                ]
+            },
+            "図書館司書": {
+                weights: {"1": 4, "5": 5, "9": 4, "12": 5, "15": 4},
+                description: "図書館で資料の管理や利用者へのサービス提供を行います。幅広い知識と丁寧な対応が求められます。",
+                details: [
+                    "蔵書の管理と整理",
+                    "利用者の情報検索支援",
+                    "図書の貸出・返却処理",
+                    "図書館イベントの企画と実施",
+                    "新刊情報の収集と選書"
+                ]
+            },
+            "テーマパークキャスト": {
+                weights: {"1": 5, "2": 4, "8": 5, "13": 4, "14": 4},
+                description: "テーマパークで来場者へのサービス提供やショーの出演を行います。高いホスピタリティと創造性が必要です。",
+                details: [
+                    "来場者への案内と情報提供",
+                    "アトラクションの運営補助",
+                    "キャラクターとしての振る舞いと写真撮影",
+                    "パレードやショーへの出演",
+                    "安全管理と緊急時対応"
+                ]
+            },
+            "通訳ガイド": {
+                weights: {"1": 5, "4": 4, "9": 5, "12": 5, "14": 3},
+                description: "外国人観光客に対して、観光案内や通訳サービスを提供します。語学力と幅広い知識、そして臨機応変な対応力が求められます。",
+                details: [
+                    "観光スポットの案内と説明",
+                    "通訳サービスの提供",
+                    "旅程の管理とスケジュール調整",
+                    "地域の文化や習慣の紹介",
+                    "緊急時のサポートと問題解決"
+                ]
+            },
+            "葬儀ディレクター": {
+                weights: {"2": 5, "3": 5, "4": 4, "11": 5, "15": 4},
+                description: "葬儀の企画や運営を行います。深い共感力と細やかな配慮、そして厳粛な場にふさわしい態度が求められます。",
+                details: [
+                    "遺族との打ち合わせと希望の聞き取り",
+                    "葬儀の企画立案と進行管理",
+                    "関係者や業者との連絡調整",
+                    "葬儀当日の式次第管理",
+                    "事務手続きのサポートと相談対応"
+                ]
+            },
+            "リラクゼーションセラピスト": {
+                weights: {"2": 5, "3": 4, "8": 4, "10": 4, "15": 4},
+                description: "マッサージや各種セラピーを提供し、顧客のリラックスと健康促進を図ります。高い技術と顧客への配慮が必要です。",
+                details: [
+                    "カウンセリングと施術プランの提案",
+                    "マッサージや各種セラピーの施術",
+                    "顧客の体調管理と施術後のアドバイス",
+                    "リラックス空間の演出と管理",
+                    "衛生管理と器具のメンテナンス"
+                ]
+            },
+        };
+
+        document.getElementById('serviceAptitudeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const scores = {};
+            const skillScores = {};
+
+            // 各質問の回答を取得
+            for (let i = 1; i <= 15; i++) {
+                const value = parseInt(document.getElementById(`q${i}`).value);
+                skillScores[i.toString()] = value;
+            }
+
+            // 各サービス職種のスコアを計算
+            for (const [jobType, typeData] of Object.entries(serviceJobTypes)) {
+                let score = 0;
+                let weightSum = 0;
+                for (const [question, weight] of Object.entries(typeData.weights)) {
+                    score += skillScores[question] * weight;
+                    weightSum += weight;
+                }
+                scores[jobType] = (score / weightSum) * 20; // 100点満点に調整
+            }
+
+            // スコアの降順でソート
+            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+            // 結果の表示
+            let resultHTML = "<h2>あなたに適したサービス職種（上位5つ）:</h2>";
+            for (let i = 0; i < 5 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                resultHTML += `<p>${i + 1}. ${jobType}: ${score.toFixed(1)}点<br>${serviceJobTypes[jobType].description}</p>`;
+            }
+
+            document.getElementById('result').innerHTML = resultHTML;
+
+            // レーダーチャートの作成
+            createRadarChart(skillScores);
+
+            // 詳細セクションの表示
+            const detailSection = document.getElementById('detailSection');
+            detailSection.style.display = 'block';
+
+            // プルダウンメニューの設定
+            const jobTypeDetail = document.getElementById('jobTypeDetail');
+            jobTypeDetail.innerHTML = '<option value="">サービス職種を選択してください</option>';
+            for (let i = 0; i < 5 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                const option = document.createElement('option');
+                option.value = jobType;
+                option.textContent = `${i + 1}. ${jobType}`;
+                jobTypeDetail.appendChild(option);
+            }
+
+            // プルダウンの変更イベントリスナー
+            jobTypeDetail.addEventListener('change', function() {
+                const selectedType = this.value;
+                const detailContent = document.getElementById('detailContent');
+                if (selectedType && serviceJobTypes[selectedType].details) {
+                    let detailHTML = `<h4>${selectedType}の具体的な仕事内容：</h4><ul>`;
+                    for (const detail of serviceJobTypes[selectedType].details) {
+                        detailHTML += `<li>${detail}</li>`;
+                    }
+                    detailHTML += '</ul>';
+                    detailContent.innerHTML = detailHTML;
+                } else {
+                    detailContent.innerHTML = '';
+                }
+            });
+        });
+
+        function createRadarChart(skillScores) {
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            const labels = [
+                'コミュニケーション能力', '共感力', '忍耐力', '臨機応変さ', '注意力',
+                'チームワーク', '問題解決能力', '身だしなみへの注意', '柔軟性', 'ストレス耐性',
+                '責任感', '記憶力', '体力', '創造性', '自己管理能力'
+            ];
+            const data = labels.map((_, index) => skillScores[(index + 1).toString()]);
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'あなたのスキル',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('printButton').addEventListener('click', function() {
+            window.print();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲーム制作・プランナー系適職診断</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+        }
+        #radarChart {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        @media print {
+            body {
+                font-size: 12px;
+            }
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>ゲーム制作・プランナー系適職診断</h1>
+    <div id="questions"></div>
+    <button onclick="diagnose()">診断結果を見る</button>
+    <div id="result"></div>
+    <div id="radarChart"></div>
+    <div id="detailSection" style="display:none;">
+        <h3>選択した職種の詳細:</h3>
+        <select id="jobSelect" onchange="showJobDetail()"></select>
+        <div id="jobDetail"></div>
+    </div>
+    <button onclick="window.print()">結果を印刷する</button>
+
+    <script>
+        const questions = [
+            "ゲームのルールやシステムを考えることが好きだ。",
+            "物語やキャラクターを創造することが得意である。",
+            "プログラミングやコーディングに興味がある。",
+            "視覚的なデザインや美術に関心がある。",
+            "音楽や効果音の制作に興味がある。",
+            "チームをまとめ、プロジェクトを管理することが得意だ。",
+            "ユーザー体験を分析し、改善策を考えることができる。",
+            "数字やデータの分析が得意である。",
+            "新しい技術やトレンドに常に注目している。",
+            "ゲーム市場や競合他社の動向に詳しい。",
+            "ゲームバランスの調整や数値設計が得意だ。",
+            "3Dモデリングや環境デザインに興味がある。",
+            "アニメーションの制作や動きの表現が得意だ。",
+            "ネットワークやサーバー技術に詳しい。",
+            "マーケティングや広告戦略を考えることが好きだ。",
+            "プレイヤーの心理を理解し、行動を予測できる。",
+            "品質管理やバグ検出のプロセスに関心がある。",
+            "多言語対応や文化の違いを考慮したローカライズに興味がある。"
+        ];
+
+        const skillLabels = [
+            "ゲームデザイン力", "ストーリー構築力", "プログラミング能力", "ビジュアルデザイン力", "音響制作能力",
+            "プロジェクト管理力", "UX分析力", "データ分析力", "技術トレンド把握力", "市場分析力",
+            "バランス調整力", "3Dデザイン力", "アニメーション力", "ネットワーク技術力", "マーケティング力",
+            "プレイヤー心理理解", "QA能力", "ローカライズ能力"
+        ];
+
+        const jobTypes = {
+            "ゲームプランナー": [0, 1, 6, 7, 10, 15, 16],
+            "ゲームデザイナー": [0, 3, 6, 10, 11, 15, 16],
+            "シナリオライター": [1, 2, 9, 15, 16, 17],
+            "ゲームプログラマー": [2, 8, 9, 13, 14, 16],
+            "グラフィックデザイナー": [3, 4, 11, 12, 15],
+            "サウンドデザイナー": [4, 5, 8, 15],
+            "プロデューサー": [5, 6, 8, 9, 10, 14, 15],
+            "UIUXデザイナー": [3, 6, 7, 15, 16],
+            "データアナリスト": [7, 8, 10, 15, 16],
+            "テクニカルアーティスト": [2, 3, 8, 11, 12],
+            "QAテスター": [0, 7, 10, 16, 17]
+        };
+
+        const jobDetails = {
+            "ゲームプランナー": "ゲームの全体構想を練り上げ、ゲームプレイの核となる要素を設計する重要な役割です。プレイヤーの体験を常に念頭に置き、面白さと挑戦のバランスを取りながら、ゲームの仕様書を作成します。他の部門と密接に連携し、アイデアを実現可能な形に落とし込む能力が求められます。市場動向やプレイヤーの嗜好を把握し、革新的で魅力的なゲーム体験を生み出す創造力が不可欠です。",
+
+            "ゲームデザイナー": "ゲームの具体的な要素（レベルデザイン、キャラクター設定、アイテム、UI等）を設計する専門家です。プレイヤーの興味を引き付け、長時間楽しめるゲーム体験を創造することが主な役割です。視覚的なデザインスキルとゲームシステムの理解の両方が求められ、プレイヤーの心理を深く理解する必要があります。常に新しいゲームメカニクスを考案し、既存の概念を革新的に組み合わせる創造性が重要です。",
+
+            "シナリオライター": "ゲームの物語、キャラクターの設定、ダイアログを執筆する創造的な職種です。プレイヤーを魅了する深みのあるストーリーと魅力的なキャラクターを生み出すことが求められます。ゲームの形式やジャンルに合わせて適切な文章を書く能力が必要で、時にはブランチング（分岐）するストーリーラインも設計します。世界観の構築力、キャラクターの心理描写力、そして多様な文体を操る能力が重要です。",
+
+            "ゲームプログラマー": "ゲームの技術的な側面を担当し、設計されたゲームプレイをコードで実現する専門家です。グラフィックス、物理演算、AI、ネットワーク通信など、様々な分野の知識と技術が要求されます。最適化されたコードを書き、パフォーマンスとゲーム体験のバランスを取る能力が重要です。常に新しい技術やプログラミング手法を学び、複雑な問題を創造的に解決する能力が求められます。",
+
+            "グラフィックデザイナー": "ゲームの視覚的要素を担当する芸術家です。キャラクター、背景、UIなど、ゲーム内のあらゆるビジュアル要素を制作します。2Dや3Dのデザインツールに精通し、ゲームのテーマや雰囲気に合った視覚効果を生み出す能力が求められます。アートディレクターのビジョンを理解し、それを具体化する技術力とクリエイティビティが必要です。常に新しいアートスタイルや表現技法を探求し続ける姿勢も重要です。",
+
+            "サウンドデザイナー": "ゲームの音響面を担当する専門家です。BGM、効果音、環境音などを制作し、ゲームの世界観や雰囲気を音で表現します。作曲能力、音響編集技術、そしてゲームエンジンでの実装知識が要求されます。プレイヤーの感情を操る力を持つ音響効果を設計し、ゲームプレイを聴覚的に補強する役割を担います。常に新しい音響表現技術を探求し、独創的なサウンドスケープを創造する能力が求められます。",
+
+            "プロデューサー": "ゲーム開発プロジェクト全体を統括し、管理する立場です。スケジュール管理、予算配分、チーム編成、外部との交渉など、多岐にわたる業務を担当します。ゲーム業界の動向を把握し、市場ニーズに合った製品を企画する能力が求められます。各部門間の調整役としても機能し、プロジェクトを成功に導くリーダーシップと問題解決能力が不可欠です。ビジネス感覚とクリエイティブな視点の両方を持ち合わせている必要があります。",
+
+            "UIUXデザイナー": "ゲーム内のユーザーインターフェースと、全体的なユーザー体験を設計する専門家です。直感的で使いやすい操作感を実現し、プレイヤーが快適にゲームを楽しめる環境を整えます。視覚的なデザインスキルとユーザビリティの深い理解が必要で、プレイヤーの行動パターンや心理を分析する能力も求められます。常に新しいUIデザインのトレンドを探り、革新的で効果的なインターフェースを生み出す創造力が重要です。",
+
+            "データアナリスト": "ゲームから得られる膨大なデータを分析し、ゲームの改善や戦略立案に貢献する職種です。プレイヤーの行動パターン、ゲーム内経済、バランス調整など、様々な側面でデータ駆動型の意思決定をサポートします。統計学やデータマイニングの知識、ビッグデータ処理技術が要求されます。分析結果を分かりやすく説明し、具体的な改善提案ができるコミュニケーション能力も重要です。常に新しい分析手法や技術を学び、洞察力を磨き続ける必要があります。",
+
+            "テクニカルアーティスト": "アートとプログラミングの架け橋となる専門家です。アーティストの制作したアセットをゲームエンジンで効率的に使用できるよう最適化し、技術的な課題を解決します。3Dモデリング、テクスチャ作成、シェーダープログラミングなど、幅広い知識と技術が要求されます。新しいグラフィック技術やツールの導入を主導し、制作パイプラインの改善にも貢献します。芸術的センスと技術的知識を両立させ、常に最新の表現技術を追求する姿勢が必要です。",
+
+            "QAテスター": "ゲームの品質保証を担当し、バグの検出や遊びやすさの検証を行う重要な役割です。系統的かつ創造的にゲームをテストし、問題点や改善案を明確に報告する能力が求められます。ゲームシステムの深い理解と、プレイヤーの視点に立った批評的思考が必要です。バグの再現手順を論理的に記述し、開発チームと効果的にコミュニケーションを取る能力も重要です。常に新しいテスト手法や自動化ツールについて学び、品質管理プロセスの効率化に貢献することが求められます。"
+        };
+
+        function createQuestions() {
+            const container = document.getElementById('questions');
+            questions.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `
+                    <p>${index + 1}. ${q}</p>
+                    <select id="q${index}">
+                        <option value="1">1 (全く当てはまらない)</option>
+                        <option value="2">2 (あまり当てはまらない)</option>
+                        <option value="3">3 (どちらとも言えない)</option>
+                        <option value="4">4 (まあ当てはまる)</option>
+                        <option value="5">5 (非常に当てはまる)</option>
+                    </select>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+function diagnose() {
+            const scores = questions.map((_, i) => parseInt(document.getElementById(`q${i}`).value));
+            const results = Object.entries(jobTypes).map(([job, indices]) => {
+                const score = indices.reduce((sum, i) => sum + scores[i], 0) / indices.length;
+                return { job, score };
+            }).sort((a, b) => b.score - a.score);
+
+            displayResults(results);
+            createRadarChart(scores);
+            showJobSelector(results);
+        }
+
+        function displayResults(results) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<h2>診断結果</h2>';
+            results.forEach(({ job, score }) => {
+                resultDiv.innerHTML += `<p>${job}: ${score.toFixed(2)}点</p>`;
+            });
+        }
+
+        function createRadarChart(scores) {
+            const ctx = document.createElement('canvas');
+            document.getElementById('radarChart').innerHTML = '';
+            document.getElementById('radarChart').appendChild(ctx);
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: skillLabels,
+                    datasets: [{
+                        label: 'あなたのスコア',
+                        data: scores,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        function showJobSelector(results) {
+            const select = document.getElementById('jobSelect');
+            select.innerHTML = '';
+            results.forEach(({ job }) => {
+                const option = document.createElement('option');
+                option.value = job;
+                option.textContent = job;
+                select.appendChild(option);
+            });
+            document.getElementById('detailSection').style.display = 'block';
+            showJobDetail();
+        }
+
+        function showJobDetail() {
+            const job = document.getElementById('jobSelect').value;
+            document.getElementById('jobDetail').textContent = jobDetails[job];
+        }
+
+        createQuestions();
+    </script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金融系適職診断</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 300px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result, #radarChart, #detailSection {
+            margin-top: 30px;
+        }
+        #detailContent {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        @media print {
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>金融系適職診断</h1>
+    <div id="questions">
+        <!-- 質問はJavaScriptで動的に生成されます -->
+    </div>
+    <div class="button-container">
+        <button onclick="diagnose()">診断結果を見る</button>
+    </div>
+    <div id="result"></div>
+    <canvas id="radarChart"></canvas>
+    <div id="detailSection" style="display:none;">
+        <h3>選択した金融職種の詳細:</h3>
+        <select id="jobSelect" onchange="showJobDetail()">
+            <!-- 職種オプションはJavaScriptで動的に生成されます -->
+        </select>
+        <div id="detailContent"></div>
+    </div>
+    <div class="button-container">
+        <button onclick="window.print()">結果を印刷する</button>
+    </div>
+
+    <script>
+        const questions = [
+            "顧客のニーズを正確に理解し、それに基づいて解決策を提案できる能力があるか。",
+            "コミュニケーションスキルについて、他者との対話や説明でどの程度自信を持っていますか？",
+            "新しいアイデアや戦略を示す際に、論理的な説得力をどの程度発揮できますか？",
+            "問題が発生した際に、どの程度迅速かつ効果的に対処できる自信がありますか？",
+            "重要なクライアントやパートナーとの関係を構築・維持する能力について、どの程度自己評価しますか？",
+            "金融商品やサービスの複雑な側面を理解し、顧客に分かりやすく説明する能力について、どの程度自信がありますか？",
+            "複数のプロジェクトを同時進行で管理し、期限を守る能力について、どの程度評価しますか？",
+            "重要な決定をする際に、データや事実に基づいた論理的な判断をどの程度行えますか？",
+            "複雑な問題を解決するための戦略を策定し、その実行に向けて計画を立てる能力について、どの程度自己評価しますか？",
+            "長期的な目標を設定し、その達成に向けて継続的に努力を続ける粘り強さについて、どの程度自信がありますか？",
+            "チームで共同作業を行う際に、自分の役割と責任を明確に理解していますか？",
+            "チーム内でのコミュニケーションにおいて、他のメンバーとの調整や意思疎通にどの程度積極的ですか？",
+            "異なる職種のチームメンバーと効果的に協力して、共通の目標を達成する経験はありますか？",
+            "上司からの指示やフィードバックを受け取り、それに基づいて業務を遂行する能力について、どの程度自己評価しますか？",
+            "チームの目標達成に向けて、他のメンバーと連携しながら計画を策定し、実行する能力について、どの程度自信がありますか？"
+        ];
+
+        const jobs = [
+            "都市銀行",
+            "都市型地方銀行",
+            "地域密着型地方銀行",
+            "大手信用金庫",
+            "地域密着型信用金庫",
+            "農協",
+            "信用組合",
+            "生命保険会社",
+            "損害保険会社",
+            "ファイナンス系金融企業"
+        ];
+
+        const jobDetails = {
+    "都市銀行": "大規模な顧客基盤と幅広い金融サービスを提供する金融機関です。国内外での業務展開が特徴で、個人・法人向けの総合的な金融サービスを展開しています。高度な金融知識と国際的な視野が求められ、グローバルな金融市場での活動や大規模なプロジェクトファイナンス、複雑な金融商品の開発などに携わることがあります。キャリアパスは多岐にわたり、専門性を深めるだけでなく、幅広い業務経験を積むことができます。語学力や分析力、リーダーシップなどが重視されます。",
+
+    "都市型地方銀行": "地方に本店を置きつつ、都市部でも積極的に事業展開する銀行です。地域特性と都市部のニーズの両方に対応できる柔軟性が必要とされます。地元企業との強い結びつきを維持しながら、都市部の顧客にも高度な金融サービスを提供します。地域経済の活性化と都市部での競争力の両立が求められ、地域密着型のサービスと先進的な金融商品の開発・提供のバランスが重要です。顧客との関係構築能力や、変化する市場環境への適応力が評価されます。",
+
+    "地域密着型地方銀行": "特定の地域に焦点を当て、地域経済の発展に貢献する銀行です。地域社会への深い理解と密接な関係構築能力が重要です。地元の中小企業や個人顧客を主な対象とし、きめ細かな金融サービスを提供します。地域の特性や課題を熟知し、地元企業の成長支援や個人の資産形成サポートなど、地域に根ざした活動を行います。コミュニティバンキングの概念が重要で、地域イベントへの参加や金融教育の提供なども行います。地域経済の動向を読み解く力や、長期的な関係構築能力が求められます。",
+
+    "大手信用金庫": "中小企業や個人向けサービスに特化し、比較的規模が大きい協同組織金融機関です。地域金融機関でありながら、幅広い金融サービスの知識と顧客対応力が求められます。預金、融資、資産運用など多様なサービスを提供し、地域経済の発展に寄与します。中小企業の経営支援や事業承継支援など、専門的なアドバイスも行います。顧客との密接な関係を維持しつつ、デジタル化やフィンテックへの対応も進めています。コミュニケーション能力や問題解決能力、金融知識の幅広さが重要です。",
+
+    "地域密着型信用金庫": "地域の中小企業や個人に密着したサービスを提供する小規模な協同組織金融機関です。コミュニティに根ざした活動と顧客との強い信頼関係構築が鍵となります。地域の隅々まで知り尽くし、face-to-faceの関係を重視したサービスを展開します。地元の祭りや行事への参加、地域の課題解決に向けた取り組みなど、金融以外の面でも地域に貢献します。中小企業の経営相談や個人の生活設計相談など、きめ細かなサポートを行います。地域への愛着と貢献意識、コミュニケーション能力が特に重要視されます。",
+
+    "農協": "農業関連の金融サービスを中心に、地域の農業発展をサポートする協同組織金融機関です。農業や地域経済に関する専門知識が必要不可欠です。農業従事者向けの融資や、農産物の販売支援、農業経営のコンサルティングなど、農業に特化したサービスを提供します。また、地域住民向けの金融サービスも行い、農村地域の生活をトータルでサポートします。農業技術の進歩や環境問題、食の安全など、農業を取り巻く様々な課題に対応する能力が求められます。農業への理解と愛着、地域コミュニティとの強い結びつきが重要です。",
+
+    "信用組合": "特定の職域や地域に根ざした相互扶助型の小規模金融機関です。メンバーシップの特性を理解し、きめ細かなサービス提供能力が重要です。組合員の事業や生活に密着した金融サービスを提供し、組合員同士の助け合いの精神を大切にします。特定の業種や地域に特化しているため、その分野に関する深い知識や人脈が求められます。組合員の事業支援や生活支援を通じて、コミュニティの発展に貢献します。コミュニケーション能力や協調性、専門分野への深い理解が重視されます。",
+
+    "生命保険会社": "長期的な生活保障や資産形成商品を提供する保険会社です。顧客のライフプランに寄り添う姿勢と、複雑な商品説明能力が求められます。死亡保障、医療保険、年金保険など、人生の様々なリスクに対応する商品を開発・提供します。顧客の人生設計全体を考慮したコンサルティング型の営業が主流で、長期的な関係構築が重要です。保険数理や金融工学の知識、コミュニケーション能力、倫理観が求められます。また、高齢化社会に対応した新商品開発や、デジタル技術を活用したサービス提供なども行います。",
+
+    "損害保険会社": "様々なリスクに対する保障を提供し、安心・安全をサポートする保険会社です。リスク分析能力と、事故対応時の迅速な判断力が重要です。自動車保険、火災保険、賠償責任保険など、幅広い保険商品を扱います。企業向けの大規模なリスクマネジメントから個人の日常生活のリスク対策まで、多様なニーズに対応します。災害時の迅速な対応や、事故予防のためのコンサルティングなども行います。リスク評価能力、法律や技術に関する知識、顧客対応力が求められます。また、テクノロジーを活用した新しい保険サービスの開発にも取り組んでいます。",
+
+    "ファイナンス系金融企業": "リース、クレジットカード、消費者金融など、特定の金融サービスに特化した企業です。専門分野での深い知識と革新的なサービス開発能力が必要です。特定の金融サービスに集中することで、そのサービスの質を高め、効率的な運営を実現しています。例えば、リース会社では企業の設備投資支援、クレジットカード会社では決済システムの開発や顧客データの分析など、各分野で専門性の高い業務を行います。フィンテックの活用や、他業種とのコラボレーションなど、革新的なアプローチも求められます。専門知識に加え、マーケティング力や IT スキルも重要になっています。"
+};
+
+        const jobWeights = {
+            "都市銀行": [3, 4, 4, 3, 5, 4, 3, 4, 3, 3, 2, 3, 4, 3, 3],
+            "都市型地方銀行": [4, 4, 3, 3, 4, 4, 3, 3, 3, 3, 3, 4, 3, 3, 3],
+            "地域密着型地方銀行": [5, 5, 3, 3, 4, 3, 2, 2, 2, 3, 4, 5, 3, 3, 4],
+            "大手信用金庫": [4, 4, 3, 3, 4, 4, 3, 3, 3, 3, 3, 4, 3, 3, 3],
+            "地域密着型信用金庫": [5, 5, 2, 3, 5, 3, 2, 2, 2, 3, 4, 5, 3, 3, 4],
+            "農協": [5, 4, 2, 3, 5, 3, 2, 2, 2, 3, 4, 5, 3, 3, 4],
+            "信用組合": [5, 5, 2, 3, 5, 3, 2, 2, 2, 3, 4, 5, 3, 3, 4],
+            "生命保険会社": [4, 5, 3, 3, 4, 5, 3, 3, 3, 4, 3, 4, 3, 3, 3],
+            "損害保険会社": [4, 5, 3, 4, 4, 5, 3, 4, 4, 3, 3, 4, 3, 3, 3],
+            "ファイナンス系金融企業": [3, 4, 4, 4, 4, 4, 4, 5, 4, 4, 3, 3, 4, 3, 3]
+        };
+
+        // 質問を動的に生成
+        const questionsContainer = document.getElementById('questions');
+        questions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.innerHTML = `
+                <p>${index + 1}. ${q}</p>
+                <select id="q${index + 1}">
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            `;
+            questionsContainer.appendChild(questionDiv);
+        });
+
+        // 職種選択オプションを動的に生成
+        const jobSelect = document.getElementById('jobSelect');
+        jobs.forEach(job => {
+            const option = document.createElement('option');
+            option.value = job;
+            option.textContent = job;
+            jobSelect.appendChild(option);
+        });
+
+        let chart;
+
+        function diagnose() {
+            const scores = questions.map((_, index) => 
+                parseInt(document.getElementById(`q${index + 1}`).value)
+            );
+
+            const jobScores = {};
+            for (const [job, weights] of Object.entries(jobWeights)) {
+                const weightedScore = scores.reduce((sum, score, index) => 
+                    sum + score * weights[index], 0
+                );
+                const maxPossibleScore = weights.reduce((sum, weight) => sum + weight * 5, 0);
+                jobScores[job] = (weightedScore / maxPossibleScore) * 100;
+            }
+
+            const sortedJobs = Object.entries(jobScores)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+
+            let result = '以下の職種があなたに適していると診断されました：';
+            let topJobs = sortedJobs.map(([job, score]) => 
+                `${job} (適性度: ${score.toFixed(2)}%)`
+            );
+
+            document.getElementById('result').innerHTML = `
+                <h2>診断結果</h2>
+                <p>${result}</p>
+                <ol>
+                    ${topJobs.map(job => `<li>${job}</li>`).join('')}
+                </ol>
+            `;
+
+            // レーダーチャートの更新
+            updateRadarChart(scores);
+
+            // 詳細セクションの表示
+            document.getElementById('detailSection').style.display = 'block';
+            document.getElementById('jobSelect').value = sortedJobs[0][0];
+            showJobDetail();
+        }
+
+        function updateRadarChart(scores) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: questions.map((_, index) => `Q${index + 1}`),
+                    datasets: [{
+                        label: 'あなたのスコア',
+                        data: scores,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        pointBackgroundColor: 'rgb(255, 99, 132)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(255, 99, 132)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        function showJobDetail() {
+            const selectedJob = document.getElementById('jobSelect').value;
+            document.getElementById('detailContent').innerHTML = `
+                <h4>${selectedJob}</h4>
+                <p>${jobDetails[selectedJob]}</p>
+            `;
+        }
+    </script>
+</body>
+</html>

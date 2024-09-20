@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公務員適職診断テスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .question label {
+            display: inline-block;
+            width: 70%;
+            margin-right: 10px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        .question select {
+            width: 25%;
+            padding: 5px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .result {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        #showResultButton, #printButton {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        #showResultButton:hover, #printButton:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        #radarChart {
+            margin-top: 30px;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .container, .container * {
+                visibility: visible;
+            }
+            .container {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>公務員適職診断テスト</h1>
+        <form id="diagnosisForm">
+            <div id="questionContainer"></div>
+            <button type="button" id="showResultButton" onclick="calculateScore()">結果を表示</button>
+        </form>
+        <div class="result" id="result"></div>
+        <canvas id="radarChart" style="display:none;"></canvas>
+        <button type="button" id="printButton" onclick="window.print()" style="display:none;">結果を印刷</button>
+    </div>
+
+    <script>
+        const questions = [
+            { text: "公共の利益を最優先に考えることができますか？", category: "公共性" },
+            { text: "法律や規則を遵守することに自信がありますか？", category: "法令順守" },
+            { text: "あなたは責任感がありますか？", category: "責任感" },
+            { text: "あなたは問題解決能力が高いですか？", category: "問題解決力" },
+            { text: "あなたはリーダーシップがありますか？", category: "リーダーシップ" },
+            { text: "あなたは倫理観が高いですか？", category: "倫理観" },
+            { text: "あなたは計画性がありますか？", category: "計画性" },
+            { text: "あなたは協調性がありますか？", category: "協調性" },
+            { text: "あなたは忍耐力がありますか？", category: "忍耐力" },
+            { text: "あなたは法律知識がありますか？", category: "法律知識" },
+            { text: "あなたは事務処理能力がありますか？", category: "事務処理能力" },
+            { text: "あなたはストレス管理ができますか？", category: "ストレス管理" },
+            { text: "あなたは柔軟性がありますか？", category: "柔軟性" },
+            { text: "あなたはフィジカルフィットネスが高いですか？", category: "体力" },
+            { text: "あなたは数学や科学の知識が豊富ですか？", category: "専門知識" },
+            { text: "基礎的学力と一般教養がありますか？", category: "一般教養" },
+            { text: "SPI対策をしていますか？", category: "試験対策" },
+            { text: "文章を読んで内容を理解する能力がありますか？", category: "読解力" },
+            { text: "数学の基礎を理解していますか？", category: "数的能力" },
+            { text: "時事問題に関心を持っていますか？", category: "時事把握" }
+        ];
+
+        let chart;
+
+        function generateQuestions() {
+            const container = document.getElementById('questionContainer');
+            questions.forEach((q, index) => {
+                container.innerHTML += `
+                    <div class="question">
+                        <label for="q${index}">${q.text}</label>
+                        <select id="q${index}" name="q${index}">
+                            <option value="">選択してください</option>
+                            <option value="5">非常に当てはまる</option>
+                            <option value="4">当てはまる</option>
+                            <option value="3">どちらとも言えない</option>
+                            <option value="2">あまり当てはまらない</option>
+                            <option value="1">まったく当てはまらない</option>
+                        </select>
+                    </div>
+                `;
+            });
+        }
+
+        function calculateScore() {
+            const categories = {};
+            let allAnswered = true;
+
+            questions.forEach((q, i) => {
+                const answer = document.getElementById(`q${i}`).value;
+                if (!answer) {
+                    allAnswered = false;
+                    return;
+                }
+                if (!categories[q.category]) {
+                    categories[q.category] = [];
+                }
+                categories[q.category].push(parseInt(answer));
+            });
+
+            if (!allAnswered) {
+                alert('すべての質問に回答してください。');
+                return;
+            }
+
+            const scores = Object.keys(categories).map(category => {
+                const sum = categories[category].reduce((a, b) => a + b, 0);
+                return {
+                    category: category,
+                    score: sum / categories[category].length
+                };
+            });
+
+            const totalScore = scores.reduce((sum, s) => sum + s.score, 0);
+            const averageScore = totalScore / scores.length;
+
+            let resultText = '';
+            if (averageScore >= 4) {
+                resultText = 'あなたは公務員に非常に適しています。推奨職種: 国家公務員、地方公務員、警察官、消防士、自衛官';
+            } else if (averageScore >= 3) {
+                resultText = 'あなたは公務員に適していますが、さらなる努力が必要です。推奨職種: 地方公務員、警察官、消防士';
+            } else {
+                resultText = 'あなたは公務員にはあまり向いていないようです。他の職業を検討してみてください。';
+            }
+
+            document.getElementById('result').innerText = resultText;
+            document.getElementById('showResultButton').style.display = 'none';
+            document.getElementById('printButton').style.display = 'block';
+
+            drawRadarChart(scores);
+        }
+
+        function drawRadarChart(scores) {
+            const ctx = document.getElementById('radarChart');
+            ctx.style.display = 'block';
+
+            const data = {
+                labels: scores.map(s => s.category),
+                datasets: [{
+                    label: '能力スコア',
+                    data: scores.map(s => s.score),
+                    fill: true,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    pointBackgroundColor: 'rgb(54, 162, 235)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(54, 162, 235)'
+                }]
+            };
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'radar',
+                data: data,
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        generateQuestions();
+    </script>
+</body>
+</html>

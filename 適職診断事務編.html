@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事務職適性診断</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .question {
+            margin-bottom: 25px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .question:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #2c3e50;
+            background-color: #ecf0f1;
+            transition: border-color 0.3s ease;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #chartContainer {
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .question {
+                padding: 10px;
+            }
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .container, .container * {
+                visibility: visible;
+            }
+            .container {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+            #printButton {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>事務職適性診断</h1>
+        <form id="officeWorkAptitudeForm">
+            <div class="question">
+                <label for="q1">1. 正確性・注意力</label>
+                <select id="q1" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q2">2. 組織力・整理整頓能力</label>
+                <select id="q2" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q3">3. コミュニケーション能力</label>
+                <select id="q3" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q4">4. IT・パソコンスキル</label>
+                <select id="q4" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q5">5. 時間管理能力</label>
+                <select id="q5" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q6">6. 柔軟性・適応力</label>
+                <select id="q6" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q7">7. 数字・データ分析能力</label>
+                <select id="q7" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q8">8. 文書作成能力</label>
+                <select id="q8" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q9">9. マルチタスク能力</label>
+                <select id="q9" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q10">10. チームワーク</label>
+                <select id="q10" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <button type="submit">結果を見る</button>
+        </form>
+        <div id="result"></div>
+        <div id="detailSection" style="display:none;">
+            <h3>選択した事務職タイプの詳細:</h3>
+            <select id="officeWorkTypeDetail">
+                <option value="">事務職タイプを選択してください</option>
+            </select>
+            <div id="detailContent"></div>
+        </div>
+        <div id="chartContainer">
+            <canvas id="skillsChart"></canvas>
+        </div>
+        <button id="printButton" style="display: none; margin-top: 20px;">結果を印刷</button>
+    </div>
+
+    <script>
+        const officeWorkTypes = {
+            一般事務: {
+                weights: {1: 3, 2: 3, 3: 2, 4: 2, 5: 2, 6: 1, 7: 1, 8: 2, 9: 2, 10: 2},
+                description: "正確性と組織力が重要です。様々な事務作業をこなす能力が求められます。",
+                details: [
+                    "文書作成や資料整理",
+                    "電話対応や来客対応",
+                    "スケジュール管理",
+                    "データ入力や管理",
+                    "会議の準備や議事録作成",
+                    "備品管理や発注業務"
+                ]
+            },
+            経理事務: {
+                weights: {1: 3, 7: 3, 4: 2, 5: 2, 8: 2, 2: 1, 3: 1, 6: 1, 9: 1, 10: 1},
+                description: "数字に強く、正確性が高いことが重要です。財務や会計の知識が求められます。",
+                details: [
+                    "帳簿記入や仕訳処理",
+                    "請求書や領収書の管理",
+                    "給与計算や支払い処理",
+                    "決算書類の作成",
+                    "税務申告の準備",
+                    "予算管理や財務分析"
+                ]
+            },
+            人事事務: {
+                weights: {3: 3, 2: 2, 4: 2, 5: 2, 8: 2, 10: 2, 1: 1, 6: 1, 7: 1, 9: 1},
+                description: "コミュニケーション能力と組織力が重要です。人事制度や労務管理の知識が求められます。",
+                details: [
+                    "採用事務や入退社手続き",
+                    "勤怠管理や給与計算",
+                    "社会保険や労働保険の手続き",
+                    "研修や教育プログラムの運営",
+                    "人事評価の事務処理",
+                    "労務管理や就業規則の管理"
+                ]
+            },
+            営業事務: {
+                weights: {3: 3, 4: 2, 5: 2, 8: 2, 9: 2, 10: 2, 1: 1, 2: 1, 6: 1, 7: 1},
+                description: "コミュニケーション能力とマルチタスク能力が重要です。営業サポートのスキルが求められます。",
+                details: [
+                    "見積書や契約書の作成",
+                    "受発注管理",
+                    "顧客データベースの管理",
+                    "営業報告書の作成と管理",
+                    "営業資料の準備",
+                    "顧客対応や問い合わせ処理"
+                ]
+            },
+            秘書: {
+                weights: {3: 3, 5: 3, 6: 2, 8: 2, 9: 2, 1: 1, 2: 1, 4: 1, 7: 1, 10: 1},
+                description: "コミュニケーション能力と時間管理能力が重要です。臨機応変な対応力が求められます。",
+                details: [
+                    "スケジュール管理と調整",
+                    "会議や出張の手配",
+                    "来客対応や電話対応",
+                    "機密文書の管理",
+                    "報告書や議事録の作成",
+                    "上司のサポートと情報管理"
+                ]
+            },
+            ITサポート事務: {
+                weights: {4: 3, 6: 2, 1: 2, 3: 2, 7: 2, 2: 1, 5: 1, 8: 1, 9: 1, 10: 1},
+                description: "IT・パソコンスキルと問題解決能力が重要です。技術的な知識とサポート能力が求められます。",
+                details: [
+                    "社内システムのユーザーサポート",
+                    "ITトラブルシューティング",
+                    "ソフトウェアやハードウェアの管理",
+                    "セキュリティ対策の実施",
+                    "IT資産の管理と発注",
+                    "マニュアルや手順書の作成"
+                ]
+            },
+            法務事務: {
+                weights: {1: 3, 8: 3, 7: 2, 4: 2, 6: 2, 2: 1, 3: 1, 5: 1, 9: 1, 10: 1},
+                description: "正確性と文書作成能力が重要です。法律知識と細部への注意が求められます。",
+                details: [
+                    "法的文書の作成と管理",
+                    "契約書のレビューと修正",
+                    "法律情報の調査と分析",
+                    "訴訟関連の事務処理",
+                    "知的財産権の管理",
+                    "コンプライアンス関連の業務"
+                ]
+            },
+            貿易事務: {
+                weights: {3: 3, 4: 2, 6: 2, 7: 2, 8: 2, 1: 1, 2: 1, 5: 1, 9: 1, 10: 1},
+                description: "コミュニケーション能力と語学力が重要です。国際的な取引に関する知識が求められます。",
+                details: [
+                    "輸出入手続きの管理",
+                    "通関書類の作成",
+                    "船積書類の準備",
+                    "為替管理",
+                    "海外取引先とのコミュニケーション",
+                    "国際物流の手配と管理"
+                ]
+            },
+            医療事務: {
+                weights: {1: 3, 3: 2, 4: 2, 6: 2, 10: 2, 2: 1, 5: 1, 7: 1, 8: 1, 9: 1},
+                description: "正確性とコミュニケーション能力が重要です。医療知識と患者対応スキルが求められます。",
+                details: [
+                    "診療報酬請求事務",
+                    "患者受付と予約管理",
+                    "医療記録の管理",
+                    "保険請求事務",
+                    "医療統計の作成",
+                    "医療機関の運営サポート"
+                ]
+            },
+            総務事務: {
+                weights: {2: 3, 3: 2, 5: 2, 6: 2, 10: 2, 1: 1, 4: 1, 7: 1, 8: 1, 9: 1},
+                description: "組織力と時間管理能力が重要です。会社全体の運営をサポートする幅広い知識が求められます。",
+                details: [
+                    "社内規定の管理と更新",
+                    "オフィス環境の整備",
+                    "社内イベントの企画と運営",
+                    "福利厚生の管理",
+                    "各部署との連携と調整",
+                    "リスク管理と危機対応"
+                ]
+            },
+            広報事務: {
+                weights: {3: 3, 8: 3, 6: 2, 9: 2, 10: 2, 1: 1, 2: 1, 4: 1, 5: 1, 7: 1},
+                description: "コミュニケーション能力と文書作成能力が重要です。情報発信とメディア対応のスキルが求められます。",
+                details: [
+                    "プレスリリースの作成と配信",
+                    "メディア対応と取材調整",
+                    "社内外向けの広報資料作成",
+                    "ウェブサイトやSNSの更新管理",
+                    "企業イメージの向上施策立案",
+                    "社内報の編集と発行"
+                ]
+            }
+        };
+
+        document.getElementById('officeWorkAptitudeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const scores = {};
+
+            // 各事務職タイプのスコアを計算
+            for (const [officeWorkType, typeData] of Object.entries(officeWorkTypes)) {
+                let score = 0;
+                for (const [question, weight] of Object.entries(typeData.weights)) {
+                    const value = parseInt(document.getElementById(`q${question}`).value);
+                    score += value * weight;
+                }
+                scores[officeWorkType] = score;
+            }
+
+            // スコアの降順でソート
+            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+            // 上位3つの結果を表示
+            let resultHTML = "<h2>あなたに適した事務職タイプ（上位3つ）:</h2>";
+            for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+                const [officeWorkType, score] = sortedScores[i];
+                resultHTML += `<p>${i + 1}. ${officeWorkType}: ${score}点<br>${officeWorkTypes[officeWorkType].description}</p>`;
+            }
+
+            document.getElementById('result').innerHTML = resultHTML;
+
+            // 詳細セクションの表示
+            const detailSection = document.getElementById('detailSection');
+            detailSection.style.display = 'block';
+
+            // プルダウンメニューの設定
+            const officeWorkTypeDetail = document.getElementById('officeWorkTypeDetail');
+            officeWorkTypeDetail.innerHTML = '<option value="">事務職タイプを選択してください</option>';
+            for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+                const [officeWorkType, score] = sortedScores[i];
+                const option = document.createElement('option');
+                option.value = officeWorkType;
+                option.textContent = `${i + 1}. ${officeWorkType}`;
+                officeWorkTypeDetail.appendChild(option);
+            }
+
+            // レーダーチャートの更新
+            updateRadarChart();
+
+            // 印刷ボタンの表示
+            document.getElementById('printButton').style.display = 'block';
+        });
+
+        // プルダウンの変更イベントリスナー
+        document.getElementById('officeWorkTypeDetail').addEventListener('change', function() {
+            const selectedType = this.value;
+            const detailContent = document.getElementById('detailContent');
+            if (selectedType && officeWorkTypes[selectedType].details) {
+                let detailHTML = `<h4>${selectedType}の具体的な業務：</h4><ul>`;
+                for (const detail of officeWorkTypes[selectedType].details) {
+                    detailHTML += `<li>${detail}</li>`;
+                }
+                detailHTML += '</ul>';
+                detailContent.innerHTML = detailHTML;
+            } else {
+                detailContent.innerHTML = '';
+            }
+        });
+
+        function updateRadarChart() {
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            const labels = [
+                '正確性・注意力', '組織力・整理整頓能力', 'コミュニケーション能力',
+                'IT・パソコンスキル', '時間管理能力', '柔軟性・適応力',
+                '数字・データ分析能力', '文書作成能力', 'マルチタスク能力', 'チームワーク'
+            ];
+            const data = labels.map((_, index) => parseInt(document.getElementById(`q${index + 1}`).value));
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'あなたのスキル',
+                        data: data,
+                        fill: true,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        // 印刷ボタンのイベントリスナー
+        document.getElementById('printButton').addEventListener('click', function() {
+            window.print();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流系職種適性診断 - あなたの最適な物流職を見つけよう！</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #4a4a4a;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        form {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #4a4a4a;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #result h2, #detailSection h3 {
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        #logisticsTypeDetail {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #detailContent ul {
+            padding-left: 20px;
+        }
+        .chart-container {
+            width: 800px; /* 2倍の大きさ */
+            height: 800px; /* 2倍の大きさ */
+            margin: 30px auto; /* 中央に配置 */
+        }
+        #radarChart {
+            max-width: 800px; /* 2倍の幅 */
+            margin: 30px auto; /* 中央に配置 */
+        }
+        #printButton {
+            margin-top: 20px;
+            background-color: #2ecc71;
+        }
+        #printButton:hover {
+            background-color: #27ae60;
+        }
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            .container {
+                width: 100%;
+                max-width: none;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #result, #detailSection, #userResponses {
+                box-shadow: none;
+            }
+            .chart-container {
+                width: 100%;
+                height: auto;
+                margin: 0;
+            }
+            #radarChart {
+                width: 100%;
+                height: auto;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>物流系職種適性診断</h1>
+        <form id="logisticsAptitudeForm" class="no-print">
+            <!-- 質問項目 -->
+            <div class="question">
+                <label for="q1">1. 体力・スタミナ</label>
+                <select id="q1" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <!-- 質問2から10まで同様に作成 -->
+                        <div class="question">
+                <label for="q2">2. 正確さ・注意力</label>
+                <select id="q2" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q3">3. チームワーク</label>
+                <select id="q3" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q4">4. 問題解決能力</label>
+                <select id="q4" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q5">5. ストレス耐性</label>
+                <select id="q5" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q6">6. 時間管理能力</label>
+                <select id="q6" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q7">7. 機器操作スキル</label>
+                <select id="q7" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q8">8. 迅速な対応力</label>
+                <select id="q8" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q9">9. 柔軟性</label>
+                <select id="q9" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q10">10. コミュニケーション能力</label>
+                <select id="q10" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <button type="button" onclick="calculateAptitude()">診断する</button>
+        </form>
+        <div id="userResponses" style="display:none;">
+            <h3>あなたの回答:</h3>
+            <ul id="responsesList"></ul>
+        </div>
+        <div id="result" style="display:none;">
+            <h2>診断結果</h2>
+            <div id="resultContent"></div>
+            <canvas id="radarChart"></canvas>
+        </div>
+        <div id="detailSection" style="display:none;">
+            <h3>あなたに最適な物流系職種の詳細:</h3>
+            <select id="logisticsTypeDetail" onchange="showLogisticsDetail()" class="no-print">
+                <option value="">選択してください</option>
+            </select>
+            <div id="detailContent"></div>
+        </div>
+        <button id="printButton" onclick="window.print()" class="no-print" style="display:none;">結果を印刷する</button>
+    </div>
+    <script>
+        const logisticsTypes = {
+            "倉庫作業員": {
+                weights: {"1": 4, "2": 4, "6": 3, "7": 3},
+                description: "商品の入出庫、ピッキング、在庫管理を行います。正確さと体力が求められます。",
+                details: [
+                    "商品の入出庫管理",
+                    "ピッキング作業",
+                    "在庫の整理と管理",
+                    "フォークリフトの操作",
+                    "出荷準備と梱包"
+                ]
+            },
+            "配送ドライバー": {
+                weights: {"1": 4, "4": 3, "8": 4, "10": 3},
+                description: "商品を安全かつ効率的に配送します。運転技術と顧客対応力が必要です。",
+                details: [
+                    "商品の配送と集荷",
+                    "車両のメンテナンス",
+                    "配送ルートの管理",
+                    "顧客との対応",
+                    "配送記録の管理"
+                ]
+            },
+            "在庫管理者": {
+                weights: {"2": 4, "3": 3, "5": 3, "7": 4},
+                description: "在庫レベルの最適化と正確な記録管理を行います。分析力と細心の注意力が重要です。",
+                details: [
+                    "在庫データの管理",
+                    "棚卸作業",
+                    "在庫の最適化",
+                    "発注管理",
+                    "在庫レポートの作成"
+                ]
+            },
+            "物流スーパーバイザー": {
+                weights: {"3": 4, "5": 4, "6": 3, "9": 3, "10": 4},
+                description: "チームを管理し、物流オペレーションを監督します。リーダーシップとコミュニケーション能力が不可欠です。",
+                details: [
+                    "チームの管理と監督",
+                    "業務の効率化",
+                    "スタッフのトレーニング",
+                    "パフォーマンス評価",
+                    "問題解決と意思決定"
+                ]
+            },
+            "物流プランナー": {
+                weights: {"3": 3, "4": 4, "6": 4, "8": 3, "9": 4},
+                description: "効率的な物流戦略を立案し実行します。分析力と創造的思考が求められます。",
+                details: [
+                    "物流計画の立案と実行",
+                    "コスト管理",
+                    "物流ネットワークの最適化",
+                    "新技術の導入検討",
+                    "パフォーマンス指標の分析"
+                ]
+            }
+        };
+
+        function calculateAptitude() {
+            const scores = {};
+            const skillScores = {};
+            const questions = [
+                "体力・スタミナ", "正確さ・注意力", "チームワーク", "問題解決能力", "ストレス耐性",
+                "時間管理能力", "機器操作スキル", "迅速な対応力", "柔軟性", "コミュニケーション能力"
+            ];
+
+            // 各質問の回答を取得
+            let responsesHTML = "<ul>";
+            for (let i = 1; i <= 10; i++) {
+                const value = parseInt(document.getElementById(`q${i}`).value);
+                skillScores[i.toString()] = value;
+                responsesHTML += `<li>${questions[i-1]}: ${value}</li>`;
+            }
+            responsesHTML += "</ul>";
+            document.getElementById('responsesList').innerHTML = responsesHTML;
+            document.getElementById('userResponses').style.display = 'block';
+
+            // 各物流職種のスコアを計算
+            for (const [jobType, typeData] of Object.entries(logisticsTypes)) {
+                let score = 0;
+                let weightSum = 0;
+                for (const [question, weight] of Object.entries(typeData.weights)) {
+                    score += skillScores[question] * weight;
+                    weightSum += weight;
+                }
+                scores[jobType] = (score / weightSum) * 20; // 100点満点に調整
+            }
+
+            // スコアの降順でソート
+            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+            // 結果の表示
+            let resultHTML = "<h2>あなたに適した物流系職種（上位3つ）:</h2>";
+            for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                resultHTML += `<p>${i + 1}. ${jobType}: ${score.toFixed(1)}点<br>${logisticsTypes[jobType].description}</p>`;
+            }
+
+            document.getElementById('resultContent').innerHTML = resultHTML;
+            document.getElementById('result').style.display = 'block';
+
+            // レーダーチャートの作成
+            createRadarChart(skillScores);
+
+            // 詳細セクションの表示
+            const detailSection = document.getElementById('detailSection');
+            detailSection.style.display = 'block';
+
+            // プルダウンメニューの設定
+            const jobTypeDetail = document.getElementById('logisticsTypeDetail');
+            jobTypeDetail.innerHTML = '<option value="">物流職種を選択してください</option>';
+            for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                const option = document.createElement('option');
+                option.value = jobType;
+                option.textContent = `${i + 1}. ${jobType}`;
+                jobTypeDetail.appendChild(option);
+            }
+
+            document.getElementById('printButton').style.display = 'block';
+        }
+
+        function createRadarChart(skillScores) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            const labels = [
+                '体力・スタミナ', '正確さ・注意力', 'チームワーク', '問題解決能力', 'ストレス耐性',
+                '時間管理能力', '機器操作スキル', '迅速な対応力', '柔軟性', 'コミュニケーション能力'
+            ];
+            const data = labels.map((_, index) => skillScores[(index + 1).toString()]);
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'あなたのスキル',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        function showLogisticsDetail() {
+            const selectedType = document.getElementById('logisticsTypeDetail').value;
+            const detailContent = document.getElementById('detailContent');
+            if (selectedType && logisticsTypes[selectedType].details) {
+                let detailHTML = `<h4>${selectedType}の具体的な仕事内容：</h4><ul>`;
+                for (const detail of logisticsTypes[selectedType].details) {
+                    detailHTML += `<li>${detail}</li>`;
+                }
+                detailHTML += '</ul>';
+                detailContent.innerHTML = detailHTML;
+            } else {
+                detailContent.innerHTML = '';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>営業適性診断 - あなたの最適な営業スタイルを見つけよう！</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+       body {
+        font-family: 'Noto Sans JP', sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f2f5;
+        color: #333;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: #4a4a4a;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+    }
+    form {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .question {
+        margin-bottom: 25px;
+    }
+    label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: #4a4a4a;
+    }
+    select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+    select:focus {
+        outline: none;
+        border-color: #3498db;
+    }
+    button {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 18px;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #2980b9;
+    }
+    #result, #detailSection, #userResponses {
+        margin-top: 30px;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    #result h2, #detailSection h3 {
+        color: #3498db;
+        margin-bottom: 20px;
+    }
+    #salesTypeDetail {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+    #detailContent ul {
+        padding-left: 20px;
+    }
+    /* レーダーチャートのサイズ調整 */
+    #radarChart {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        max-height: 600px;
+        margin: 30px auto;
+    }
+    #printButton {
+        margin-top: 20px;
+        background-color: #2ecc71;
+    }
+    #printButton:hover {
+        background-color: #27ae60;
+    }
+    @media print {
+        body {
+            background-color: #fff;
+        }
+        .container {
+            width: 100%;
+            max-width: none;
+            padding: 0;
+        }
+        .no-print {
+            display: none !important;
+        }
+        #result, #detailSection, #userResponses {
+            box-shadow: none;
+        }
+        #userResponses, #result, #detailSection {
+            display: block !important;
+        }
+        #radarChart {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            max-height: 600px;
+            margin: 0 auto;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #radarChart {
+            max-height: 400px;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>営業適性診断</h1>
+        <form id="salesAptitudeForm" class="no-print">
+            <div class="question">
+                <label for="q1">1. コミュニケーション能力</label>
+                <select id="q1" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q2">2. プレゼンテーション能力</label>
+                <select id="q2" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q3">3. 交渉力</label>
+                <select id="q3" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q4">4. 問題解決能力</label>
+                <select id="q4" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q5">5. 自己管理能力</label>
+                <select id="q5" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q6">6. チームワーク</label>
+                <select id="q6" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q7">7. 商品知識</label>
+                <select id="q7" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q8">8. 分析能力</label>
+                <select id="q8" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q9">9. 顧客関係構築能力</label>
+                <select id="q9" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q10">10. 責任感</label>
+                <select id="q10" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q11">11. 顧客分析能力</label>
+                <select id="q11" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q12">12. 柔軟性</label>
+                <select id="q12" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q13">13. 忍耐力</label>
+                <select id="q13" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q14">14. クリエイティブ思考</label>
+                <select id="q14" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q15">15. ストレス管理能力</label>
+                <select id="q15" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <button type="button" onclick="calculateAptitude()">診断する</button>
+        </form>
+        <div id="userResponses" style="display:none;">
+            <h3>あなたの回答:</h3>
+            <ul id="responsesList"></ul>
+        </div>
+        <div id="result" style="display:none;">
+            <h2>診断結果</h2>
+            <div id="resultContent"></div>
+            <canvas id="radarChart"></canvas>
+        </div>
+        <div id="detailSection" style="display:none;">
+            <h3>あなたに最適な営業タイプの詳細:</h3>
+            <select id="salesTypeDetail" onchange="showSalesDetail()" class="no-print">
+                <option value="">選択してください</option>
+            </select>
+            <div id="detailContent"></div>
+        </div>
+        <button id="printButton" onclick="window.print()" class="no-print" style="display:none;">結果を印刷する</button>
+    </div>
+
+    <script>
+        const salesTypes = {
+            不動産営業: {
+                weights: {1: 3, 3: 3, 9: 3, 15: 2, 5: 1},
+                description: "顧客とのコミュニケーション、交渉力、関係構築が重要です。",
+                details: [
+                    "住宅用不動産の販売",
+                    "商業用不動産の賃貸・売買",
+                    "投資用不動産の提案",
+                    "不動産の査定・仲介",
+                    "不動産開発プロジェクトの営業"
+                ]
+            },
+            ルート営業: {
+                weights: {5: 3, 9: 3, 12: 3, 13: 2, 1: 1},
+                description: "自己管理能力、顧客関係構築、柔軟性が求められます。",
+                details: [
+                    "既存顧客への定期的な訪問販売",
+                    "商品の補充・メンテナンス",
+                    "新商品の提案・導入",
+                    "顧客ニーズの収集と社内へのフィードバック",
+                    "競合他社の動向調査"
+                ]
+            },
+            金融営業: {
+                weights: {1: 3, 3: 3, 8: 3, 10: 2, 15: 1},
+                description: "コミュニケーション能力、交渉力、分析能力が重要です。",
+                details: [
+                    "個人向け金融商品（預金、ローン、投資信託）の販売",
+                    "法人向け融資・資金調達の提案",
+                    "保険商品の販売",
+                    "資産運用のコンサルティング",
+                    "クレジットカードの獲得"
+                ]
+            },
+            メーカー営業: {
+                weights: {3: 3, 6: 3, 7: 3, 13: 2, 1: 1},
+                description: "交渉力、チームワーク、商品知識が求められます。",
+                details: [
+                    "自社製品の卸売業者や小売店への販売",
+                    "新製品の導入・プロモーション",
+                    "大口顧客との取引交渉",
+                    "市場調査と製品開発へのフィードバック",
+                    "展示会やイベントでの商品PR"
+                ]
+            },
+            ITソリューション営業: {
+                weights: {2: 3, 4: 3, 7: 3, 8: 2, 14: 1},
+                description: "プレゼンテーション能力、問題解決能力、商品知識が重要です。",
+                details: [
+                    "企業向けITシステムの提案・販売",
+                    "クラウドサービスの導入支援",
+                    "セキュリティソリューションの提案",
+                    "システム導入後のサポート・保守契約の締結",
+                    "IT戦略のコンサルティング"
+                ]
+            },
+            医薬品営業: {
+                weights: {4: 3, 5: 3, 7: 3, 10: 2, 13: 1},
+                description: "問題解決能力、自己管理能力、商品知識が求められます。",
+                details: [
+                    "医師や薬剤師への新薬の情報提供",
+                    "医療機関への医薬品の販売・納入",
+                    "製品の有効性や安全性に関する説明",
+                    "市場動向の調査と本社へのフィードバック",
+                    "医療セミナーや学会でのプレゼンテーション"
+                ]
+            },
+            広告営業: {
+                weights: {1: 3, 2: 3, 11: 3, 14: 2, 8: 1},
+                description: "コミュニケーション能力、プレゼンテーション能力、顧客分析能力が重要です。",
+                details: [
+                    "企業向け広告枠の販売（TV、ラジオ、雑誌、ウェブ）",
+                    "広告キャンペーンの企画・提案",
+                    "効果的な広告戦略の立案",
+                    "新規メディアや広告手法の開拓",
+                    "広告効果の分析とレポーティング"
+                ]
+            },
+            サービス営業: {
+                weights: {6: 3, 9: 3, 12: 3, 1: 2, 4: 1},
+                description: "チームワーク、顧客関係構築、柔軟性が求められます。",
+                details: [
+                    "ホテル・旅館の宿泊予約販売",
+                    "旅行パッケージの企画・販売",
+                    "人材派遣・紹介サービスの営業",
+                    "教育サービス（学習塾、企業研修）の営業",
+                    "美容・健康サービス（エステ、フィットネスクラブ）の会員獲得"
+                ]
+            },
+            オンライン営業: {
+                weights: {5: 3, 11: 3, 12: 3, 15: 2, 8: 1},
+                description: "自己管理能力、顧客分析能力、柔軟性が重要です。",
+                details: [
+                    "Eコマースサイトでの商品販売",
+                    "オンライン広告の販売・運用",
+                    "ウェビナーやオンラインセミナーの企画・運営",
+                    "SNSを活用したマーケティング",
+                    "デジタルコンテンツ（電子書籍、オンラインコース）の販売"
+                ]
+            },
+            IT営業: {
+                weights: {2: 3, 4: 3, 8: 3, 10: 2, 14: 1},
+                description: "プレゼンテーション能力、問題解決能力、分析能力が求められます。",
+                details: [
+                    "ハードウェア（サーバー、PC、ネットワーク機器）の販売",
+                    "ソフトウェアライセンスの販売",
+                    "SaaS（Software as a Service）の提案・導入支援",
+                    "システムインテグレーションサービスの提案",
+                    "ITインフラの構築・運用支援"
+                ]
+            }
+        };
+
+        function calculateAptitude() {
+            const scores = {};
+            const skillScores = {};
+            const questions = [
+                "コミュニケーション能力", "プレゼンテーション能力", "交渉力", "問題解決能力", "自己管理能力",
+                "チームワーク", "商品知識", "分析能力", "顧客関係構築能力", "責任感",
+                "顧客分析能力", "柔軟性", "忍耐力", "クリエイティブ思考", "ストレス管理能力"
+            ];
+
+            let responsesHTML = "<ul>";
+            for (let i = 1; i <= 15; i++) {
+                const value = parseInt(document.getElementById(`q${i}`).value);
+                skillScores[i.toString()] = value;
+                responsesHTML += `<li>${questions[i-1]}: ${value}</li>`;
+            }
+            responsesHTML += "</ul>";
+            document.getElementById('responsesList').innerHTML = responsesHTML;
+            document.getElementById('userResponses').style.display = 'block';
+
+            for (const [salesType, typeData] of Object.entries(salesTypes)) {
+                let score = 0;
+                let weightSum = 0;
+                for (const [question, weight] of Object.entries(typeData.weights)) {
+                    score += skillScores[question] * weight;
+                    weightSum += weight;
+                }
+                scores[salesType] = (score / weightSum) * 20;
+            }
+
+            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+            let resultHTML = "<h2>あなたに適した営業タイプ（上位3つ）:</h2>";
+            for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+                const [salesType, score] = sortedScores[i];
+                resultHTML += `<p>${i + 1}. ${salesType}: ${score.toFixed(1)}点<br>${salesTypes[salesType].description}</p>`;
+            }
+
+            document.getElementById('resultContent').innerHTML = resultHTML;
+            document.getElementById('result').style.display = 'block';
+
+            createRadarChart(skillScores);
+
+            const detailSection = document.getElementById('detailSection');
+            detailSection.style.display = 'block';
+
+            const salesTypeDetail = document.getElementById('salesTypeDetail');
+            salesTypeDetail.innerHTML = '<option value="">営業タイプを選択してください</option>';
+            for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+                const [salesType, score] = sortedScores[i];
+                const option = document.createElement('option');
+                option.value = salesType;
+                option.textContent = `${i + 1}. ${salesType}`;
+                salesTypeDetail.appendChild(option);
+            }
+
+            document.getElementById('printButton').style.display = 'block';
+
+            showSalesDetail(sortedScores[0][0]);
+        }
+
+        function createRadarChart(skillScores) {
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    const labels = [
+        'コミュニケーション能力', 'プレゼンテーション能力', '交渉力', '問題解決能力', '自己管理能力',
+        'チームワーク', '商品知識', '分析能力', '顧客関係構築能力', '責任感',
+        '顧客分析能力', '柔軟性', '忍耐力', 'クリエイティブ思考', 'ストレス管理能力'
+    ];
+    const data = labels.map((_, index) => skillScores[(index + 1).toString()]);
+
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'あなたのスキル',
+                data: data,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgb(54, 162, 235)',
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(54, 162, 235)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: {
+                        display: true
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 5
+                }
+            },
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
+            },
+            layout: {
+                padding: {
+                    top: 20,
+                    right: 20,
+                    bottom: 20,
+                    left: 20
+                }
+            }
+        }
+    });
+}
+
+        function showSalesDetail(selectedType) {
+            if (!selectedType) {
+                selectedType = document.getElementById('salesTypeDetail').value;
+            }
+            const detailContent = document.getElementById('detailContent');
+            if (selectedType && salesTypes[selectedType].details) {
+                let detailHTML = `<h4>${selectedType}の具体的な仕事内容：</h4><ul>`;
+                for (const detail of salesTypes[selectedType].details) {
+                    detailHTML += `<li>${detail}</li>`;
+                }
+                detailHTML += '</ul>';
+                detailContent.innerHTML = detailHTML;
+            } else {
+                detailContent.innerHTML = '';
+            }
+        }
+    </script>
+</body>
+</html>

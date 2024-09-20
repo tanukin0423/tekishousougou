@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>介護職適性診断 - あなたに最適な介護職を見つけよう！</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        form {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #result h2, #detailSection h3 {
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        #jobTypeDetail {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #detailContent ul {
+            padding-left: 20px;
+        }
+        #radarChart {
+            max-width: 500px;
+            margin: 30px auto;
+        }
+        #printButton {
+            margin-top: 20px;
+            background-color: #2ecc71;
+        }
+        #printButton:hover {
+            background-color: #27ae60;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #result, #result *, #radarChart, #radarChart * {
+                visibility: visible;
+            }
+            #result {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>介護職適性診断</h1>
+        <form id="careAptitudeForm">
+            <div class="question">
+                <label for="q1">1. 高齢者や障がい者とのコミュニケーション能力</label>
+                <select id="q1" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q2">2. 共感力と患者さんへの思いやり</label>
+                <select id="q2" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q3">3. 体力と持久力</label>
+                <select id="q3" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q4">4. 忍耐力とストレス耐性</label>
+                <select id="q4" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q5">5. 観察力と状況判断能力</label>
+                <select id="q5" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q6">6. チームワークとコラボレーション能力</label>
+                <select id="q6" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q7">7. 介護や医療に関する知識・技術の習得意欲</label>
+                <select id="q7" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q8">8. 責任感と倫理観</label>
+                <select id="q8" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q9">9. 問題解決能力と臨機応変な対応力</label>
+                <select id="q9" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q10">10. 記録・報告の正確性と文書作成能力</label>
+                <select id="q10" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <button type="submit">診断結果を見る</button>
+        </form>
+        <div id="result"></div>
+        <div id="radarChart">
+            <canvas id="skillChart"></canvas>
+        </div>
+        <div id="detailSection" style="display:none;">
+            <h3>選択した介護職の詳細:</h3>
+            <select id="jobTypeDetail"></select>
+            <div id="detailContent"></div>
+        </div>
+        <button id="printButton">結果を印刷する</button>
+    </div>
+
+    <script>
+        const careJobTypes = {
+            "介護福祉士": {
+                weights: {1: 3, 2: 3, 3: 2, 5: 2, 7: 3},
+                description: "高齢者や障がい者の日常生活を総合的に支援します。専門的な知識と技術、そして高い倫理観が求められます。",
+                details: [
+                    "入浴、食事、排泄などの日常生活支援",
+                    "利用者の状態観察と記録",
+                    "レクリエーション活動の企画と実施",
+                    "家族とのコミュニケーションと情報共有",
+                    "他の医療専門職との連携"
+                ]
+            },
+            "訪問介護員（ホームヘルパー）": {
+                weights: {1: 3, 2: 3, 3: 2, 9: 3, 10: 2},
+                description: "利用者の自宅を訪問し、日常生活の支援を行います。臨機応変な対応力と自己管理能力が重要です。",
+                details: [
+                    "食事、入浴、排泄などの身体介護",
+                    "掃除、洗濯、買い物などの生活援助",
+                    "利用者の状態観察と報告",
+                    "緊急時の適切な対応",
+                    "サービス計画に基づく支援の実施"
+                ]
+            },
+            "デイサービス職員": {
+                weights: {1: 3, 2: 2, 3: 2, 6: 3, 7: 2},
+                description: "日中、施設で高齢者の介護や活動支援を行います。楽しく安全な環境づくりと、個々のニーズに応じたケアが求められます。",
+                details: [
+                    "利用者の送迎と健康チェック",
+                    "入浴や食事の介助",
+                    "レクリエーションやリハビリ活動の実施",
+                    "利用者の状態観察と記録",
+                    "家族や関係機関との連絡調整"
+                ]
+            },
+            "ケアマネージャー（介護支援専門員）": {
+                weights: {1: 3, 5: 3, 7: 3, 9: 3, 10: 3},
+                description: "利用者のケアプランを作成し、適切なサービスを調整します。幅広い知識と調整力、そして高い問題解決能力が必要です。",
+                details: [
+                    "利用者のアセスメントとケアプラン作成",
+                    "介護サービス事業者との連絡調整",
+                    "利用者や家族との相談対応",
+                    "サービス担当者会議の開催と進行",
+                    "給付管理と各種書類の作成"
+                ]
+            },
+            "特別養護老人ホーム職員": {
+                weights: {2: 3, 3: 3, 4: 3, 6: 3, 8: 3},
+                description: "24時間体制で高齢者の生活を支援します。チームワークと高い専門性、そして強い責任感が求められます。",
+                details: [
+                    "食事、入浴、排泄などの日常生活支援",
+                    "利用者の健康管理と状態観察",
+                    "レクリエーション活動の企画と実施",
+                    "夜間の見守りと緊急対応",
+                    "記録の作成と情報共有"
+                ]
+            },
+            "認知症ケア専門員": {
+                weights: {2: 3, 4: 3, 5: 3, 7: 3, 9: 3},
+                description: "認知症の方々に特化したケアを提供します。高度な専門知識と豊かな創造性、そして強い忍耐力が必要です。",
+                details: [
+                    "認知症の症状に応じた個別ケアの実施",
+                    "環境調整による行動・心理症状の緩和",
+                    "家族への支援とアドバイス",
+                    "認知機能維持のためのアクティビティ実施",
+                    "他の専門職との連携による総合的支援"
+                ]
+            },
+"リハビリテーション専門職（PT・OT・ST）": {
+                weights: {1: 2, 5: 3, 7: 3, 9: 3, 10: 2},
+                description: "身体機能や生活能力の回復・維持を支援します。専門的な知識と技術、そして粘り強さが求められます。",
+                details: [
+                    "身体機能評価とリハビリテーション計画の立案",
+                    "運動療法や作業療法、言語療法の実施",
+                    "日常生活動作（ADL）の改善支援",
+                    "福祉用具の選定と使用指導",
+                    "他職種との連携による包括的支援"
+                ]
+            },
+            "グループホーム職員": {
+                weights: {1: 3, 2: 3, 4: 2, 6: 3, 8: 2},
+                description: "認知症高齢者が共同生活を送る場での支援を行います。家庭的な雰囲気づくりと、個別ケアの実践が重要です。",
+                details: [
+                    "食事作りや掃除など日常生活の共同実施",
+                    "服薬管理と健康チェック",
+                    "個別ニーズに応じたケアの提供",
+                    "地域との交流活動の企画と実施",
+                    "夜間の見守りと緊急対応"
+                ]
+            },
+            "サービス付き高齢者向け住宅スタッフ": {
+                weights: {1: 2, 2: 2, 5: 2, 9: 3, 10: 2},
+                description: "自立した生活を送る高齢者の安心と快適さをサポートします。柔軟な対応力と高い問題解決能力が求められます。",
+                details: [
+                    "安否確認と生活相談",
+                    "緊急時の対応と連絡調整",
+                    "生活支援サービスの提供（食事、掃除など）",
+                    "コミュニティ活動の企画と運営",
+                    "外部サービスとの連携調整"
+                ]
+            },
+            "介護タクシー運転手": {
+                weights: {1: 2, 2: 2, 3: 3, 8: 3, 9: 2},
+                description: "移動に制限のある方々の外出をサポートします。安全運転技術と介護の基本スキル、そして高い責任感が必要です。",
+                details: [
+                    "利用者の乗降介助",
+                    "車いすやストレッチャーの操作",
+                    "安全で快適な運転",
+                    "簡単な介護や応急処置",
+                    "医療機関や介護施設との連絡調整"
+                ]
+            }
+        };
+
+        document.getElementById('careAptitudeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const scores = {};
+            const skillScores = {};
+
+            // 各質問の回答を取得
+            for (let i = 1; i <= 10; i++) {
+                const value = parseInt(document.getElementById(`q${i}`).value);
+                skillScores[i] = value;
+            }
+
+            // 各職種のスコアを計算
+            for (const [jobType, typeData] of Object.entries(careJobTypes)) {
+                let score = 0;
+                for (const [question, weight] of Object.entries(typeData.weights)) {
+                    score += skillScores[question] * weight;
+                }
+                scores[jobType] = score;
+            }
+
+            // スコアの降順でソート
+            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+            // 結果の表示
+            let resultHTML = "<h2>あなたに適した介護職（上位5つ）:</h2>";
+            for (let i = 0; i < 5 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                resultHTML += `<p>${i + 1}. ${jobType}: ${score}点<br>${careJobTypes[jobType].description}</p>`;
+            }
+
+            document.getElementById('result').innerHTML = resultHTML;
+
+            // レーダーチャートの作成
+            createRadarChart(skillScores);
+
+            // 詳細セクションの表示
+            const detailSection = document.getElementById('detailSection');
+            detailSection.style.display = 'block';
+
+            // プルダウンメニューの設定
+            const jobTypeDetail = document.getElementById('jobTypeDetail');
+            jobTypeDetail.innerHTML = '<option value="">介護職を選択してください</option>';
+            for (let i = 0; i < 5 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                const option = document.createElement('option');
+                option.value = jobType;
+                option.textContent = `${i + 1}. ${jobType}`;
+                jobTypeDetail.appendChild(option);
+            }
+
+            // プルダウンの変更イベントリスナー
+            jobTypeDetail.addEventListener('change', function() {
+                const selectedType = this.value;
+                const detailContent = document.getElementById('detailContent');
+                if (selectedType && careJobTypes[selectedType].details) {
+                    let detailHTML = `<h4>${selectedType}の具体的な仕事内容：</h4><ul>`;
+                    for (const detail of careJobTypes[selectedType].details) {
+                        detailHTML += `<li>${detail}</li>`;
+                    }
+                    detailHTML += '</ul>';
+                    detailContent.innerHTML = detailHTML;
+                } else {
+                    detailContent.innerHTML = '';
+                }
+            });
+        });
+
+        function createRadarChart(skillScores) {
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            const labels = [
+                'コミュニケーション能力', '共感力', '体力', '忍耐力', '観察力',
+                'チームワーク', '知識・技術習得意欲', '責任感', '問題解決能力', '記録・報告能力'
+            ];
+            const data = Object.values(skillScores);
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'あなたのスキル',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('printButton').addEventListener('click', function() {
+            window.print();
+        });
+    </script>
+</body>
+</html>

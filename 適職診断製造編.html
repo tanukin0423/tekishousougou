@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ものづくり・製造ライン適性診断 - あなたに最適な職種を見つけよう！</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        form {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #result h2, #detailSection h3 {
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        #jobTypeDetail {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #detailContent ul {
+            padding-left: 20px;
+        }
+        #radarChart {
+            max-width: 500px;
+            margin: 30px auto;
+        }
+        #printButton {
+            margin-top: 20px;
+            background-color: #2ecc71;
+        }
+        #printButton:hover {
+            background-color: #27ae60;
+        }
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            .container {
+                width: 100%;
+                max-width: none;
+                padding: 0;
+            }
+            form, #printButton {
+                box-shadow: none;
+            }
+            #result, #detailSection {
+                box-shadow: none;
+            }
+            button[type="submit"] {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ものづくり・製造ライン適性診断</h1>
+        <form id="manufacturingAptitudeForm">
+            <div class="question">
+                <label for="q1">1. 細かい作業への集中力</label>
+                <select id="q1" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q2">2. 機械操作への興味</label>
+                <select id="q2" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q3">3. 品質管理への意識</label>
+                <select id="q3" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q4">4. チームワーク能力</label>
+                <select id="q4" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q5">5. 安全意識</label>
+                <select id="q5" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q6">6. 問題解決能力</label>
+                <select id="q6" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q7">7. 体力・持久力</label>
+                <select id="q7" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q8">8. 技術習得への意欲</label>
+                <select id="q8" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q9">9. 効率性への意識</label>
+                <select id="q9" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q10">10. 創造性・アイデア力</label>
+                <select id="q10" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q11">11. 忍耐力・根気強さ</label>
+                <select id="q11" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <div class="question">
+                <label for="q12">12. 数値・データへの理解力</label>
+                <select id="q12" required>
+                    <option value="">選択してください</option>
+                    <option value="1">1 (低い)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 (高い)</option>
+                </select>
+            </div>
+            <button type="submit">診断結果を見る</button>
+        </form>
+        <div id="result"></div>
+        <div id="radarChart">
+            <canvas id="skillChart"></canvas>
+        </div>
+        <div id="detailSection" style="display:none;">
+            <h3>選択した職種の詳細:</h3>
+            <select id="jobTypeDetail"></select>
+            <div id="detailContent"></div>
+        </div>
+        <button id="printButton">結果を印刷する</button>
+    </div>
+
+    <script>
+        const manufacturingJobTypes = {
+            "生産ライン作業員": {
+                weights: {"1": 5, "2": 4, "3": 5, "4": 4, "5": 5, "7": 4, "9": 4, "11": 5},
+                description: "製造ラインで製品の組立や検査を行います。高い集中力と品質管理意識が求められます。",
+                details: [
+                    "製品の組立や部品の取り付け",
+                    "製造ラインの機器操作",
+                    "製品の品質チェックと不良品の選別",
+                    "作業手順の遵守と改善提案",
+                    "安全規則の遵守と5S活動への参加"
+                ]
+            },
+            "機械オペレーター": {
+                weights: {"2": 5, "5": 5, "6": 4, "8": 4, "9": 4, "12": 4},
+                description: "生産設備や機械を操作し、製品を製造します。機械への理解と安全意識が重要です。",
+                details: [
+                    "生産設備の起動、停止、調整",
+                    "機械のメンテナンスと簡単な修理",
+                    "生産データの記録と報告",
+                    "品質基準に基づく製品チェック",
+                    "新しい機械や技術の習得"
+                ]
+            },
+            "品質管理技術者": {
+                weights: {"1": 4, "3": 5, "6": 5, "8": 4, "9": 4, "12": 5},
+                description: "製品の品質を保証するための検査や分析を行います。高い品質意識と分析力が必要です。",
+                details: [
+                    "製品の品質検査と測定",
+                    "品質データの分析と報告書作成",
+                    "品質改善のための提案と実施",
+                    "品質管理システムの構築と運用",
+                    "従業員への品質教育の実施"
+                ]
+            },
+            "製造プロセスエンジニア": {
+                weights: {"6": 5, "8": 5, "9": 5, "10": 4, "12": 5},
+                description: "製造プロセスの設計や改善を行います。高い問題解決能力と効率性への意識が求められます。",
+                details: [
+                    "製造プロセスの分析と最適化",
+                    "新しい製造方法の研究と導入",
+                    "生産効率向上のための改善案の提案と実施",
+                    "製造コストの分析と削減策の立案",
+                    "他部門との連携による製造プロセスの改善"
+                ]
+            },
+            "設備保全技術者": {
+                weights: {"2": 5, "5": 5, "6": 5, "8": 4, "11": 4},
+                description: "製造設備の保守、点検、修理を行います。機械への深い理解と問題解決能力が必要です。",
+                details: [
+                    "定期的な設備点検と予防保全",
+                    "設備の故障診断と修理",
+                    "設備の性能向上のための改造や更新",
+                    "保全記録の作成と管理",
+                    "新しい保全技術の習得と導入"
+                ]
+            },
+            "製品開発エンジニア": {
+                weights: {"1": 4, "3": 5, "6": 5, "8": 5, "10": 5, "12": 4},
+                description: "新製品の設計や既存製品の改良を行います。高い創造性と技術習得への意欲が求められます。",
+                details: [
+                    "新製品のコンセプト立案と設計",
+                    "試作品の製作と性能評価",
+                    "製品の改良と最適化",
+                    "技術文書の作成",
+                    "他部門との連携による製品化の推進"
+                ]
+            },
+            "生産管理スタッフ": {
+                weights: {"4": 5, "6": 4, "9": 5, "12": 5},
+                description: "生産計画の立案や進捗管理を行います。高い効率性意識とデータ分析能力が必要です。",
+                details: [
+                    "生産計画の立案と調整",
+                    "材料や部品の在庫管理",
+                    "生産進捗の管理と報告",
+                    "生産効率の分析と改善提案",
+                    "他部門との連携による生産最適化"
+                ]
+            },
+            "溶接工": {
+                weights: {"1": 5, "2": 4, "5": 5, "7": 4, "8": 4, "11": 4},
+                description: "金属部品の溶接作業を行います。高い技術力と安全意識が求められます。",
+                details: [
+                    "図面に基づく溶接作業",
+                    "溶接機器の操作とメンテナンス",
+                    "溶接部の品質検査",
+                    "安全規則の遵守と保護具の適切な使用",
+                    "新しい溶接技術の習得"
+                ]
+            },
+            "組立ライン監督者": {
+                weights: {"3": 5, "4": 5, "5": 5, "6": 4, "9": 4},
+                description: "組立ラインの管理と作業者の指導を行います。高いリーダーシップと品質管理意識が必要です。",
+                details: [
+                    "組立ラインの作業管理と進捗確認",
+                    "作業者への指導と教育",
+                    "品質基準の徹底と管理",
+                    "生産性向上のための改善活動の推進",
+                    "安全管理と労務管理"
+                ]
+            },
+            "工業デザイナー": {
+                weights: {"1": 4, "3": 4, "8": 4, "10": 5, "12": 4},
+                description: "製品の外観や使いやすさを設計します。高い創造性とユーザー視点が求められます。",
+                details: [
+                    "製品デザインの企画と設計",
+                    "3Dモデリングと設計図面の作成",
+                    "ユーザビリティを考慮した製品改良",
+                    "デザインコンセプトのプレゼンテーション",
+                    "製造部門との連携によるデザインの実現性確認"
+                ]
+            },
+            "ロボット技術者": {
+                weights: {"2": 5, "6": 5, "8": 5, "10": 4, "12": 5},
+                description: "産業用ロボットの開発や導入、保守を行います。高度な技術力と創造性が必要です。",
+                details: [
+                    "産業用ロボットのプログラミングと制御",
+                    "ロボットシステムの設計と導入",
+                    "ロボットの保守と troubleshooting",
+                    "新しいロボット技術の研究と開発",
+                    "ロボット導入による生産性向上の提案"
+                ]
+            },
+            "資材調達スペシャリスト": {
+                weights: {"4": 4, "6": 4, "9": 5, "12": 5},
+                description: "製造に必要な部品や材料の調達を行います。コスト意識と交渉力が求められます。",
+                details: [
+                    "部品・材料の発注と在庫管理",
+                    "サプライヤーとの価格交渉と品質管理",
+                    "調達コストの分析と削減策の立案",
+                    "新規サプライヤーの開拓と評価",
+                    "他部門との連携による調達最適化"
+                ]
+            },
+            "製造IT技術者": {
+                weights: {"2": 4, "6": 5, "8": 5, "9": 4, "12": 5},
+                description: "製造現場のIT化やシステム開発を行います。高いIT知識と製造プロセスへの理解が必要です。",
+                details: [
+                    "製造管理システムの開発と運用",
+                    "生産設備のネットワーク化とIoT導入",
+                    "製造データの収集と分析システムの構築",
+                    "製造現場のIT化による効率化の提案",
+                    "サイバーセキュリティ対策の実施"
+                ]
+            },
+            "環境安全衛生管理者": {
+                weights: {"3": 4, "5": 5, "6": 4, "11": 4, "12": 4},
+                description: "製造現場の環境保護、安全衛生管理を行います。高い安全意識と法令知識が求められます。",
+                details: [
+                    "職場の安全衛生管理と巡視",
+                    "環境保護対策の立案と実施",
+                    "従業員への安全衛生教育の実施",
+                    "労働災害の予防と対策",
+                    "環境安全衛生に関する法令遵守の確認"
+                ]
+            },
+        };
+
+        document.getElementById('manufacturingAptitudeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const scores = {};
+            const skillScores = {};
+
+            // 各質問の回答を取得
+            for (let i = 1; i <= 12; i++) {
+                const value = parseInt(document.getElementById(`q${i}`).value);
+                skillScores[i.toString()] = value;
+            }
+
+            // 各職種のスコアを計算
+            for (const [jobType, typeData] of Object.entries(manufacturingJobTypes)) {
+                let score = 0;
+                let weightSum = 0;
+                for (const [question, weight] of Object.entries(typeData.weights)) {
+                    score += skillScores[question] * weight;
+                    weightSum += weight;
+                }
+                scores[jobType] = (score / weightSum) * 20; // 100点満点に調整
+            }
+
+            // スコアの降順でソート
+            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+            // 結果の表示
+            let resultHTML = "<h2>あなたに適したものづくり・製造ライン職種（上位5つ）:</h2>";
+            for (let i = 0; i < 5 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                resultHTML += `<p>${i + 1}. ${jobType}: ${score.toFixed(1)}点<br>${manufacturingJobTypes[jobType].description}</p>`;
+            }
+
+            document.getElementById('result').innerHTML = resultHTML;
+
+            // レーダーチャートの作成
+            createRadarChart(skillScores);
+
+            // 詳細セクションの表示
+            const detailSection = document.getElementById('detailSection');
+            detailSection.style.display = 'block';
+
+            // プルダウンメニューの設定
+            const jobTypeDetail = document.getElementById('jobTypeDetail');
+            jobTypeDetail.innerHTML = '<option value="">職種を選択してください</option>';
+            for (let i = 0; i < 5 && i < sortedScores.length; i++) {
+                const [jobType, score] = sortedScores[i];
+                const option = document.createElement('option');
+                option.value = jobType;
+                option.textContent = `${i + 1}. ${jobType}`;
+                jobTypeDetail.appendChild(option);
+            }
+
+            // プルダウンの変更イベントリスナー
+            jobTypeDetail.addEventListener('change', function() {
+                const selectedType = this.value;
+                const detailContent = document.getElementById('detailContent');
+                if (selectedType && manufacturingJobTypes[selectedType].details) {
+                    let detailHTML = `<h4>${selectedType}の具体的な仕事内容：</h4><ul>`;
+                    for (const detail of manufacturingJobTypes[selectedType].details) {
+                        detailHTML += `<li>${detail}</li>`;
+                    }
+                    detailHTML += '</ul>';
+                    detailContent.innerHTML = detailHTML;
+                } else {
+                    detailContent.innerHTML = '';
+                }
+            });
+        });
+
+        function createRadarChart(skillScores) {
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            const labels = [
+                '細かい作業への集中力', '機械操作への興味', '品質管理への意識', 'チームワーク能力', '安全意識',
+                '問題解決能力', '体力・持久力', '技術習得への意欲', '効率性への意識', '創造性・アイデア力',
+                '忍耐力・根気強さ', '数値・データへの理解力'
+            ];
+            const data = labels.map((_, index) => skillScores[(index + 1).toString()]);
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'あなたのスキル',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('printButton').addEventListener('click', function() {
+            window.print();
+        });
+    </script>
+</body>
+</html>

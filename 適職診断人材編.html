@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人材系適職診断</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+        }
+        #radarChart {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        @media print {
+            body {
+                font-size: 12px;
+            }
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>人材系適職診断</h1>
+    <div id="questions"></div>
+    <button onclick="diagnose()">診断結果を見る</button>
+    <div id="result"></div>
+    <div id="radarChart"></div>
+    <div id="detailSection" style="display:none;">
+        <h3>選択した職種の詳細:</h3>
+        <select id="jobSelect" onchange="showJobDetail()"></select>
+        <div id="jobDetail"></div>
+    </div>
+    <button onclick="window.print()">結果を印刷する</button>
+
+    <script>
+        const questions = [
+            "他人と円滑にコミュニケーションを取ることができる。",
+            "複雑な問題を分析し、解決策を見出すことが得意である。",
+            "ストレスの多い状況下でも冷静に対応できる。",
+            "新しい人と出会うことやネットワーキングを楽しむことができる。",
+            "他者からのフィードバックを受け入れ、自己改善に活かすことができる。",
+            "時間管理が得意で、締め切りを守ることができる。",
+            "細部に注意を払い、正確に仕事を進めることができる。",
+            "自分の感情をコントロールし、プロフェッショナルな態度を保つことができる。",
+            "チームで働くことに喜びを感じる。",
+            "困難な状況でもモチベーションを保つことができる。",
+            "新しいスキルや知識を学ぶことに意欲的である。",
+            "他者のニーズや感情に対して敏感であり、共感力がある。",
+            "複数のプロジェクトを同時に管理する能力がある。",
+            "目標を設定し、それを達成するために努力することができる。",
+            "クリエイティブなアイデアを出すことが得意である。",
+            "粘り強く交渉を行うことができる。",
+            "市場動向や業界トレンドに常に注目している。",
+            "説得力のあるプレゼンテーションを行うことができる。"
+        ];
+
+        const skillLabels = [
+            "コミュニケーション力", "分析力", "ストレス耐性", "人脈構築力", "自己改善力",
+            "時間管理力", "正確性", "感情制御力", "チームワーク", "モチベーション維持力",
+            "学習意欲", "共感力", "マルチタスク力", "目標達成力", "創造力",
+            "交渉力", "市場分析力", "プレゼン力"
+        ];
+
+        const jobTypes = {
+            "人材紹介": [0, 1, 2, 3, 4, 6, 7, 9, 11, 13],
+            "人材派遣": [0, 2, 5, 6, 8, 12],
+            "求人広告": [0, 3, 5, 8, 10, 13, 14],
+            "人材コンサルティング": [0, 1, 4, 7, 9, 10, 11, 12],
+            "求人開拓": [3, 4, 9, 10, 13, 15, 16, 17],
+            "人材会社営業": [0, 3, 4, 7, 9, 11, 13, 15, 17]
+        };
+
+        const jobDetails = {
+            "人材紹介": "求職者と企業のマッチングを行い、キャリアアドバイスを提供します。主な業務には、求職者の面談、スキル評価、企業のニーズ分析、適切な求人の紹介、面接のアレンジなどが含まれます。また、長期的な関係構築のため、配属後のフォローアップも重要です。コミュニケーション能力、人間関係構築スキル、そして労働市場の深い理解が求められます。",
+            "人材派遣": "企業の一時的な人材ニーズに対応し、適切な人材を派遣します。主な業務には、人材プールの管理、スキルマッチング、契約管理、労務管理などがあります。派遣社員と派遣先企業の双方のニーズを満たすため、迅速な対応力と効率的な人材管理能力が重要です。また、労働法規への深い理解も必要とされます。",
+            "求人広告": "企業の求人情報を効果的に広告し、適切な人材を引き付けます。主な業務には、求人原稿の作成、広告媒体の選定、広告効果の分析、クライアントへの提案などがあります。求職者の心理を理解し、魅力的な求人広告を作成するためのマーケティングスキルとクリエイティブな思考が重要です。また、デジタルマーケティングの知識も求められます。",
+            "人材コンサルティング": "企業の人材戦略を分析し、最適な解決策を提案します。主な業務には、組織分析、人材アセスメント、研修プログラムの設計、キャリア開発支援などがあります。クライアント企業の業界や組織文化を深く理解し、中長期的な視点で人材戦略を立案する能力が求められます。また、データ分析力や問題解決能力も重要です。",
+            "求人開拓": "新規の求人案件を開拓し、企業のニーズを把握して適切な人材を提案します。主な業務には、新規顧客の開拓、企業訪問、人材ニーズのヒアリング、求人内容の設計、採用計画の提案などがあります。営業力と市場分析能力が重要で、企業の経営課題を理解し、人材面からの解決策を提案できる戦略的思考力が求められます。",
+            "人材会社営業": "企業や大学に対して人材サービスの活用を提案し、新規顧客を開拓します。主な業務には、新規顧客の開拓、既存顧客の維持・拡大、サービス内容の説明、契約交渉などがあります。人材業界の幅広い知識と、クライアントの業界に対する理解が必要です。また、長期的な関係構築のための高いコミュニケーション能力と、説得力のあるプレゼンテーション能力が求められます。"
+        };
+
+        function createQuestions() {
+            const container = document.getElementById('questions');
+            questions.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `
+                    <p>${index + 1}. ${q}</p>
+                    <select id="q${index}">
+                        <option value="1">1 (全く当てはまらない)</option>
+                        <option value="2">2 (あまり当てはまらない)</option>
+                        <option value="3">3 (どちらとも言えない)</option>
+                        <option value="4">4 (まあ当てはまる)</option>
+                        <option value="5">5 (非常に当てはまる)</option>
+                    </select>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function diagnose() {
+            const scores = questions.map((_, i) => parseInt(document.getElementById(`q${i}`).value));
+            const results = Object.entries(jobTypes).map(([job, indices]) => {
+                const score = indices.reduce((sum, i) => sum + scores[i], 0) / indices.length;
+                return { job, score };
+            }).sort((a, b) => b.score - a.score);
+
+            displayResults(results);
+            createRadarChart(scores);
+            showJobSelector(results);
+        }
+
+        function displayResults(results) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<h2>診断結果</h2>';
+            results.forEach(({ job, score }) => {
+                resultDiv.innerHTML += `<p>${job}: ${score.toFixed(2)}点</p>`;
+            });
+        }
+
+        function createRadarChart(scores) {
+            const ctx = document.createElement('canvas');
+            document.getElementById('radarChart').innerHTML = '';
+            document.getElementById('radarChart').appendChild(ctx);
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: skillLabels,
+                    datasets: [{
+                        label: 'あなたのスコア',
+                        data: scores,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        function showJobSelector(results) {
+            const select = document.getElementById('jobSelect');
+            select.innerHTML = '';
+            results.forEach(({ job }) => {
+                const option = document.createElement('option');
+                option.value = job;
+                option.textContent = job;
+                select.appendChild(option);
+            });
+            document.getElementById('detailSection').style.display = 'block';
+            showJobDetail();
+        }
+
+        function showJobDetail() {
+            const job = document.getElementById('jobSelect').value;
+            document.getElementById('jobDetail').textContent = jobDetails[job];
+        }
+
+        createQuestions();
+    </script>
+</body>
+</html>

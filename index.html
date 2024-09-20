@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キャリアコンパス - あなたの適職を見つけよう</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --background-color: #F0F2F5;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+        }
+
+        header {
+            background: linear-gradient(135deg, #4A90E2, #5AB9EA);
+            color: white;
+            text-align: center;
+            padding: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .compass-link {
+            display: block;
+            width: 100%;
+            padding: 2rem;
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, #1c69c2, #1d84b8);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .compass-link:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-container {
+            margin-bottom: 2rem;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+        }
+
+        .job-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .job-link {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-size: 1rem;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .job-link:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .job-link i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* カテゴリー別の色設定 */
+        .business { background: linear-gradient(135deg, #599ee3, #5AB9EA); }
+        .technology { background: linear-gradient(135deg, #9B59B6, #8E44AD); }
+        .service { background: linear-gradient(135deg, #2ECC71, #27AE60); }
+        .creative { background: linear-gradient(135deg, #E67E22, #D35400); }
+        .professional { background: linear-gradient(135deg, #E74C3C, #C0392B); }
+
+        .category-title.business { color: #eaeef1; border-color: #4A90E2; }
+        .category-title.technology { color: #e0d5e5; border-color: #9B59B6; }
+        .category-title.service { color: #cfdfd6; border-color: #2ECC71; }
+        .category-title.creative { color: #e1d9d2; border-color: #E67E22; }
+        .category-title.professional { color: #ddccca; border-color: #E74C3C; }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .job-container {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>キャリアコンパス</h1>
+        <p class="subtitle">あなたの適職を見つけよう</p>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>自分に合った職業を見つけましょう</h2>
+            <p>キャリアコンパスでは、あなたの適性や興味に基づいて、最適な職業を提案します。<br>
+            総合診断または特定の職種診断を選んで、あなたのcareer journeyを始めましょう。</p>
+        </section>
+
+        <a href="総合診断ページ.html" class="compass-link">
+            <i class="fas fa-compass"></i> 自分の羅針盤 - 総合適職診断
+            <br><small>あなたの適性を総合的に分析し、最適な職種を提案します</small>
+        </a>
+
+        <h3>職種別診断</h3>
+
+        <div class="category-container">
+            <h4 class="category-title business">ビジネス系</h4>
+            <div class="job-container">
+                <a href="適職診断営業編.html" class="job-link business"><i class="fas fa-handshake"></i>営業系<br><small>コミュニケーション力を活かしたい方に</small></a>
+                <a href="適職診断商社編.html" class="job-link business"><i class="fas fa-globe"></i>商社系<br><small>国際的なビジネスに興味がある方に</small></a>
+                <a href="適職診断物流編.html" class="job-link business"><i class="fas fa-truck"></i>物流系<br><small>効率的な輸送・管理が得意な方に</small></a>
+                <a href="適職診断流通編.html" class="job-link business"><i class="fas fa-store"></i>流通系<br><small>商品の流れに関心がある方に</small></a>
+            </div>
+        </div>
+
+        <div class="category-container">
+            <h4 class="category-title technology">テクノロジー系</h4>
+            <div class="job-container">
+                <a href="適職診断IT編.html" class="job-link technology"><i class="fas fa-laptop-code"></i>IT系<br><small>テクノロジーが好きな方に</small></a>
+                <a href="適職診断ゲーム業界編.html" class="job-link technology"><i class="fas fa-gamepad"></i>ゲーム業界系<br><small>ゲーム開発やデザインに興味がある方に</small></a>
+            </div>
+        </div>
+
+        <div class="category-container">
+            <h4 class="category-title service">対人サービス系</h4>
+            <div class="job-container">
+                <a href="適職診断販売編.html" class="job-link service"><i class="fas fa-cash-register"></i>販売系<br><small>接客やセールスが得意な方に</small></a>
+                <a href="適職診断サービス編.html" class="job-link service"><i class="fas fa-concierge-bell"></i>サービス系<br><small>おもてなしの心を持つ方に</small></a>
+                <a href="適職診断介護編.html" class="job-link service"><i class="fas fa-hand-holding-heart"></i>介護系<br><small>人を支援することに喜びを感じる方に</small></a>
+                <a href="適職診断人材編.html" class="job-link service"><i class="fas fa-users"></i>人材系<br><small>人材育成や組織開発に関心がある方に</small></a>
+            </div>
+        </div>
+
+        <div class="category-container">
+            <h4 class="category-title creative">クリエイティブ系</h4>
+            <div class="job-container">
+                <a href="適職診断クリエイティブ編.html" class="job-link creative"><i class="fas fa-paint-brush"></i>クリエイティブ系<br><small>アイデアを形にすることが好きな方に</small></a>
+                <a href="適職診断製造編.html" class="job-link creative"><i class="fas fa-industry"></i>モノづくり・製造ライン系<br><small>手先が器用で製品作りに興味がある方に</small></a>
+            </div>
+        </div>
+
+        <div class="category-container">
+            <h4 class="category-title professional">専門職系</h4>
+            <div class="job-container">
+                <a href="適職診断金融編.html" class="job-link professional"><i class="fas fa-chart-line"></i>金融系<br><small>数字やリスク管理に強い方に</small></a>
+                <a href="適職診断公務員編.html" class="job-link professional"><i class="fas fa-landmark"></i>公務員系<br><small>社会貢献や公共サービスに興味がある方に</small></a>
+                <a href="適職診断事務編.html" class="job-link professional"><i class="fas fa-file-alt"></i>事務職系<br><small>正確さと効率を重視する方に</small></a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 キャリアコンパス All Rights Reserved.</p>
+    </footer>
+</body>
+</html>

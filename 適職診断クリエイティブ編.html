@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クリエイティブ系適職診断</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result, #detailSection {
+            margin-top: 30px;
+        }
+        #radarChart {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        @media print {
+            body {
+                font-size: 12px;
+            }
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>クリエイティブ系適職診断</h1>
+    <div id="questions"></div>
+    <button onclick="diagnose()">診断結果を見る</button>
+    <div id="result"></div>
+    <div id="radarChart"></div>
+    <div id="detailSection" style="display:none;">
+        <h3>選択した職種の詳細:</h3>
+        <select id="jobSelect" onchange="showJobDetail()"></select>
+        <div id="jobDetail"></div>
+    </div>
+    <button onclick="window.print()">結果を印刷する</button>
+
+    <script>
+        const questions = [
+            "視覚的に美しいデザインを作成することが得意である。",
+            "複雑な問題を創造的に解決することができる。",
+            "締め切りに追われる状況下でも質の高い作品を生み出せる。",
+            "他者の意見やフィードバックを受け入れ、作品に反映できる。",
+            "最新のデザインツールやソフトウェアの使用に熟練している。",
+            "ブランドの本質を理解し、それを視覚的に表現できる。",
+            "文章を通じて読者を惹きつけ、感動させることができる。",
+            "複雑な情報をわかりやすく視覚化することが得意である。",
+            "音楽や音響効果を通じて感情を伝えることができる。",
+            "3D空間やアニメーションを創造することが得意である。",
+            "ユーザーの行動や心理を理解し、それに基づいてデザインできる。",
+            "写真を通じて物語を語り、感情を伝えることができる。",
+            "戦略的思考に基づいて広告キャンペーンを企画できる。",
+            "映像を通じて観客を魅了し、メッセージを伝えられる。",
+            "製品の機能性と美しさを両立させたデザインを作れる。",
+            "デジタルとアナログの技術を組み合わせて表現できる。",
+            "異なる文化や価値観を理解し、それを作品に反映できる。",
+            "トレンドを先取りし、革新的なデザインを生み出せる。"
+        ];
+
+        const skillLabels = [
+            "ビジュアルデザイン力", "創造的問題解決力", "プレッシャー耐性", "フィードバック活用力", "技術習熟度",
+            "ブランド表現力", "文章力", "情報視覚化能力", "音響表現力", "3D・アニメーション力",
+            "UXデザイン力", "写真表現力", "広告企画力", "映像表現力", "プロダクトデザイン力",
+            "複合メディア活用力", "異文化理解力", "トレンド創造力"
+        ];
+
+        const jobTypes = {
+            "グラフィックデザイナー": [0, 1, 2, 3, 4, 5, 7, 15, 17],
+            "UIUXデザイナー": [0, 1, 3, 4, 7, 10, 15, 17],
+            "ウェブデザイナー": [0, 1, 2, 3, 4, 5, 7, 10, 15],
+            "イラストレーター": [0, 1, 2, 3, 4, 6, 15, 16],
+            "アートディレクター": [0, 1, 3, 5, 13, 15, 16, 17],
+            "コピーライター": [1, 2, 3, 6, 12, 13, 16, 17],
+            "3DCGアーティスト": [0, 1, 2, 4, 9, 14, 15, 17],
+            "モーショングラフィックデザイナー": [0, 1, 2, 4, 7, 9, 13, 15],
+            "サウンドデザイナー": [1, 2, 3, 8, 13, 15, 16, 17],
+            "フォトグラファー": [0, 1, 2, 3, 11, 13, 15, 16],
+            "プロダクトデザイナー": [0, 1, 3, 4, 10, 14, 15, 17]
+        };
+
+        const jobDetails = {
+            "グラフィックデザイナー": "視覚的なコミュニケーションのスペシャリストとして、ロゴ、パンフレット、ポスター、パッケージなど、幅広いメディアのデザインを手がけます。クライアントの要望を理解し、それを魅力的なビジュアルに変換する能力が求められます。最新のデザインソフトウェアに精通し、色彩理論やタイポグラフィの知識も必要です。常に変化するデザイントレンドに敏感で、独創的なアイデアを生み出す創造力が不可欠です。",
+
+            "UIUXデザイナー": "デジタル製品の使いやすさと視覚的魅力を両立させるプロフェッショナルです。ユーザーの行動パターンや心理を深く理解し、直感的で効率的なインターフェースを設計します。ワイヤーフレームの作成からプロトタイピング、ユーザーテストまで、製品開発の全段階に関わります。技術的な知識とデザインスキルの両方が求められ、常に変化するデジタル技術とユーザー傾向に適応する必要があります。",
+
+            "ウェブデザイナー": "オンライン上の視覚的体験を創造するスペシャリストです。美しさと機能性を兼ね備えたウェブサイトを設計し、HTML、CSS、JavaScriptなどの技術を駆使して実装します。レスポンシブデザインの知識やSEOの基本的な理解も必要です。クライアントの要望とユーザーのニーズの両方を満たすデザインを生み出す能力が求められ、常に進化するウェブ技術とデザイントレンドに追従する必要があります。",
+
+            "イラストレーター": "絵を通じて物語を語り、感情を伝えるアーティストです。書籍の挿絵、広告ビジュアル、キャラクターデザインなど、様々な分野で活躍します。独自の表現スタイルを確立し、クライアントの要望に合わせて柔軟に対応する能力が求められます。デジタルツールと従来の手法の両方に精通し、締め切りに追われる中でも質の高い作品を生み出す能力が必要です。市場動向や文化的背景への深い理解も重要です。",
+
+            "アートディレクター": "視覚的なプロジェクト全体を統括する創造的リーダーです。広告キャンペーン、ブランディング、出版物など、大規模なプロジェクトのビジュアル面を指揮します。強力な美的センスとビジネス感覚を併せ持ち、クライアントの目標を視覚的に表現する能力が求められます。チームを率いてプロジェクトを成功に導く必要があり、優れたコミュニケーション能力とリーダーシップスキルが不可欠です。常に革新的なアイデアを生み出し、業界のトレンドを先導する役割も担います。",
+
+            "コピーライター": "言葉の力で人々の心を動かすクリエイターです。広告、ウェブコンテンツ、商品説明など、様々な媒体で効果的な文章を書きます。製品やサービスの本質を理解し、それを魅力的な言葉で表現する能力が求められます。短い言葉で大きなインパクトを与える技術や、ターゲット層に響く表現を選ぶ洞察力が必要です。常に変化する言語トレンドやポップカルチャーに敏感であることも重要です。締め切りのプレッシャーの中で質の高い文章を生み出す能力も求められます。",
+
+            "3DCGアーティスト": "コンピューター上で三次元の世界を創造するデジタルクリエイターです。映画、ゲーム、広告、建築ビジュアライゼーションなど、幅広い分野で活躍します。高度な技術スキルと芸術的センスの両方が求められ、複雑な3Dモデリングソフトウェアを駆使して、リアルな質感や動きを表現します。物理法則の理解や光の振る舞いに関する知識も必要です。常に進化する3D技術に追従し、新しい表現方法を模索し続ける必要があります。",
+
+            "モーショングラフィックデザイナー": "動きのあるグラフィックデザインを専門とするクリエイターです。ビデオ広告、オープニングクレジット、インフォグラフィックアニメーションなどを制作します。静止画のデザインスキルに加え、アニメーションと映像編集の技術が求められます。タイミングと動きの感覚が重要で、複雑な情報を視覚的に分かりやすく伝える能力が必要です。After EffectsやCinema 4Dなどのソフトウェアに精通し、常に新しい動きの表現方法を追求することが求められます。",
+
+            "サウンドデザイナー": "音響を通じて感情や雰囲気を創り出す専門家です。映画、テレビ、ゲーム、広告など、様々な媒体で音の世界を構築します。音楽理論と技術的知識の両方が求められ、高度な音響機器やソフトウェアを使いこなす必要があります。物語や視覚要素を深く理解し、それを補完する音響効果を創造する能力が重要です。環境音、効果音、音楽を巧みに組み合わせ、聴衆の感情を操る力が求められます。常に新しい音の表現方法を探求し続ける姿勢も大切です。",
+
+            "フォトグラファー": "カメラを通じて瞬間を捉え、物語を語るビジュアルアーティストです。広告、ファッション、報道、芸術など、多岐にわたる分野で活躍します。技術的なカメラの操作スキルと芸術的な構図の感覚の両方が求められます。光の扱い方や被写体との関係性の構築も重要です。撮影後の編集技術も必要で、デジタル処理ソフトウェアに精通している必要があります。常に変化する視覚文化やテクノロジーに適応し、独自の視点を持ち続けることが求められます。",
+
+            "プロダクトデザイナー": "日常生活で使用される製品の形状と機能を設計する創造的なプロフェッショナルです。家電、家具、車両など、幅広い製品を対象とします。美的センスと工学的知識の両方が求められ、使いやすさと視覚的魅力を両立させる能力が必要です。3DCAADソフトウェアを駆使して設計を行い、製造プロセスの理解も重要です。ユーザーニーズの深い理解や、持続可能性への配慮も求められます。常に新しい材料や製造技術に注目し、革新的なデザインを生み出す必要があります。"
+        };
+
+        function createQuestions() {
+            const container = document.getElementById('questions');
+            questions.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `
+                    <p>${index + 1}. ${q}</p>
+                    <select id="q${index}">
+                        <option value="1">1 (全く当てはまらない)</option>
+                        <option value="2">2 (あまり当てはまらない)</option>
+                        <option value="3">3 (どちらとも言えない)</option>
+                        <option value="4">4 (まあ当てはまる)</option>
+                        <option value="5">5 (非常に当てはまる)</option>
+                    </select>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function diagnose() {
+            const scores = questions.map((_, i) => parseInt(document.getElementById(`q${i}`).value));
+            const results = Object.entries(jobTypes).map(([job, indices]) => {
+                const score = indices.reduce((sum, i) => sum + scores[i], 0) / indices.length;
+                return { job, score };
+            }).sort((a, b) => b.score - a.score);
+
+            displayResults(results);
+            createRadarChart(scores);
+            showJobSelector(results);
+        }
+
+        function displayResults(results) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<h2>診断結果</h2>';
+            results.forEach(({ job, score }) => {
+                resultDiv.innerHTML += `<p>${job}: ${score.toFixed(2)}点</p>`;
+            });
+        }
+
+        function createRadarChart(scores) {
+            const ctx = document.createElement('canvas');
+            document.getElementById('radarChart').innerHTML = '';
+            document.getElementById('radarChart').appendChild(ctx);
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: skillLabels,
+                    datasets: [{
+                        label: 'あなたのスコア',
+                        data: scores,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        function showJobSelector(results) {
+            const select = document.getElementById('jobSelect');
+            select.innerHTML = '';
+            results.forEach(({ job }) => {
+                const option = document.createElement('option');
+                option.value = job;
+                option.textContent = job;
+                select.appendChild(option);
+            });
+            document.getElementById('detailSection').style.display = 'block';
+            showJobDetail();
+        }
+
+        function showJobDetail() {
+            const job = document.getElementById('jobSelect').value;
+            document.getElementById('jobDetail').textContent = jobDetails[job];
+        }
+
+        createQuestions();
+    </script>
+</body>
+</html>
