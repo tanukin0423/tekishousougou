@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>適職診断サイト</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #instructions {
+            margin-bottom: 20px;
+        }
+        #question-container {
+            margin-bottom: 20px;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .option {
+            flex: 1 0 calc(20% - 10px);
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .option:hover, .option:focus {
+            background-color: #e0e0e0;
+        }
+        .option.selected {
+            background-color: #d3d3d3;
+            border-color: #4CAF50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover, button:focus {
+            background-color: #45a049;
+        }
+        #result-container {
+            display: none;
+        }
+        #radar-chart-container {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            margin: 0 auto;
+        }
+        #pdf-btn, #print-btn {
+            background-color: #008CBA;
+            margin-top: 20px;
+        }
+        #pdf-btn:hover, #print-btn:hover,
+        #pdf-btn:focus, #print-btn:focus {
+            background-color: #007B9A;
+        }
+        #progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        #progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* レスポンシブデザイン */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            .option {
+                flex: 1 0 calc(33.33% - 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>適職診断サイト</h1>
+        <div id="instructions">
+            <p>このアセスメントでは、いくつかの質問に答えることで、あなたの適職を診断します。各質問には1から5のボタンがあります。</p>
+            <ul>
+                <li>1: 全く当てはまらない</li>
+                <li>2: あまり当てはまらない</li>
+                <li>3: どちらでもない</li>
+                <li>4: ある程度当てはまる</li>
+                <li>5: とても当てはまる</li>
+            </ul>
+        </div>
+        <div id="progress-bar"><div id="progress"></div></div>
+        <div id="question-container"></div>
+        <button id="submit-btn" style="display:none;">結果を見る</button>
+        <button id="reset-btn">回答をリセット</button>
+        <div id="result-container">
+            <h2>診断結果</h2>
+            <div id="radar-chart-container">
+                <canvas id="radar-chart"></canvas>
+            </div>
+            <div id="job-recommendations"></div>
+            <div id="additional-info"></div>
+            <button id="pdf-btn">結果をPDFで保存</button>
+            <button id="print-btn">画面印刷</button>
+        </div>
+    </div>
+
+    <script>
+    // (前のコードと同じ質問とキャリアのデータ)
+    const questions = [
+    { text: "新しいアイデアを考え出すのが得意だ", category: "興味・適性", factor: "創造性" },
+    { text: "数字やデータを分析するのが好きだ", category: "興味・適性", factor: "分析力" },
+    { text: "人々と交流し、関係を築くのが得意だ", category: "興味・適性", factor: "対人関係" },
+    { text: "物事を組織化し、計画を立てるのが得意だ", category: "スキル", factor: "組織力" },
+    { text: "芸術的な活動や表現に興味がある", category: "興味・適性", factor: "芸術性" },
+    { text: "複雑な問題を論理的に解決するのが好きだ", category: "スキル", factor: "問題解決能力" },
+    { text: "チームで効果的に作業ができる", category: "スキル", factor: "チームワーク" },
+    { text: "アイデアを明確に伝えられる", category: "スキル", factor: "コミュニケーション力" },
+    { text: "時間を効率的に管理できる", category: "スキル", factor: "時間管理" },
+    { text: "新しい情報を素早く学び、適用できる", category: "スキル", factor: "学習能力" },
+    { text: "仕事と私生活のバランスを重視する", category: "価値観", factor: "ワークライフバランス" },
+    { text: "社会に貢献することを大切だと思う", category: "価値観", factor: "社会貢献" },
+    { text: "常に新しいことにチャレンジしたい", category: "価値観", factor: "挑戦志向" },
+    { text: "安定した収入や職場環境を重視する", category: "価値観", factor: "安定性重視" },
+    { text: "自分の能力を最大限に発揮したい", category: "価値観", factor: "自己実現" },
+    { text: "新しい状況に適応するのが得意だ", category: "パーソナリティ", factor: "適応力" },
+    { text: "ストレスの多い状況でも冷静でいられる", category: "パーソナリティ", factor: "ストレス耐性" },
+    { text: "リーダーシップを発揮するのが好きだ", category: "パーソナリティ", factor: "リーダーシップ" },
+    { text: "細部に注意を払うことができる", category: "パーソナリティ", factor: "緻密さ" },
+    { text: "従来とは異なる新しい方法や考え方を積極的に取り入れたい",category: "パーソナリティ", factor: "開放性" },
+    { text: "他人の感情を理解し、共感することが得意だ", category: "スキル", factor: "感情知性" },
+    { text: "複数の課題を同時に効率的に管理できる", category: "スキル", factor: "マルチタスク能力" },
+    { text: "長期的な目標を設定し、計画的に行動できる", category: "パーソナリティ", factor: "計画性" },
+    { text: "多様な背景を持つ人々と協力することに興味がある", category: "価値観", factor: "多様性重視" },
+    { text: "新しい技術やツールを積極的に学び、活用したい", category: "興味・適性", factor: "技術適応力" },
+    { text: "大量のデータから意味のあるパターンを見出せる", category: "スキル", factor: "データ分析力" },
+    { text: "情報セキュリティやプライバシー保護に関心がある", category: "興味・適性", factor: "セキュリティ意識" },
+    { text: "プロセスや手順を最適化することに興味がある", category: "興味・適性", factor: "プロセス最適化" },
+    { text: "技術的な問題の解決策を見つけるのが好きだ", category: "興味・適性", factor: "技術的問題解決" },
+    { text: "環境問題や持続可能性に関心がある", category: "価値観", factor: "環境意識" }
+    ];
+    const careerFields = [
+    {
+        name: "IT・ソフトウェア開発",
+        profile: [5, 5, 3, 4, 2, 5, 4, 4, 4, 5, 3, 3, 5, 3, 5, 4, 4, 3, 4, 5, 3, 4, 4, 3, 5, 5, 5, 5, 5, 3]
+    },
+    {
+        name: "マーケティング・広告",
+        profile: [5, 4, 5, 4, 3, 4, 4, 5, 4, 4, 3, 4, 5, 3, 5, 5, 4, 4, 3, 5, 4, 5, 4, 4, 4, 5, 3, 4, 3, 3]
+    },
+    {
+        name: "営業・販売",
+        profile: [3, 3, 5, 3, 2, 3, 4, 5, 4, 3, 3, 3, 4, 4, 4, 5, 4, 4, 3, 4, 5, 4, 3, 4, 3, 3, 2, 3, 2, 2]
+    },
+    {
+        name: "教育・研修",
+        profile: [4, 3, 5, 4, 3, 4, 5, 5, 4, 5, 4, 5, 4, 4, 5, 4, 4, 4, 4, 4, 5, 4, 4, 5, 3, 3, 3, 3, 3, 4]
+    },
+    {
+        name: "金融・保険",
+        profile: [3, 5, 4, 5, 2, 5, 4, 4, 5, 4, 3, 3, 3, 5, 4, 3, 4, 4, 5, 3, 3, 4, 5, 3, 4, 5, 5, 4, 3, 3]
+    },
+    {
+        name: "医療・ヘルスケア",
+        profile: [3, 4, 5, 3, 2, 4, 5, 4, 4, 5, 3, 5, 3, 4, 4, 4, 5, 3, 5, 4, 5, 4, 3, 4, 4, 3, 4, 3, 3, 4]
+    },
+    {
+        name: "製造・生産",
+        profile: [4, 4, 3, 5, 2, 4, 4, 3, 5, 4, 3, 3, 3, 4, 4, 3, 4, 4, 5, 3, 2, 4, 4, 3, 4, 4, 4, 5, 5, 4]
+    },
+    {
+        name: "小売・サービス",
+        profile: [3, 2, 5, 3, 2, 3, 4, 5, 4, 3, 3, 3, 3, 4, 4, 5, 4, 3, 3, 4, 5, 4, 3, 4, 3, 2, 2, 3, 2, 2]
+    },
+    {
+        name: "クリエイティブ・デザイン",
+        profile: [5, 3, 4, 3, 5, 4, 4, 5, 4, 5, 4, 4, 5, 3, 5, 5, 3, 3, 5, 5, 4, 4, 3, 4, 4, 3, 3, 4, 4, 4]
+    },
+    {
+        name: "物流・運輸",
+        profile: [2, 3, 3, 5, 1, 3, 4, 3, 5, 3, 3, 3, 3, 4, 3, 4, 4, 4, 4, 3, 2, 4, 4, 3, 3, 3, 3, 5, 4, 3]
+    },
+    {
+        name: "データサイエンティスト",
+        profile: [5, 5, 3, 4, 2, 5, 4, 4, 4, 5, 3, 3, 4, 3, 5, 4, 4, 3, 5, 5, 3, 4, 4, 4, 5, 5, 4, 4, 5, 3]
+    },
+    {
+        name: "環境コンサルタント",
+        profile: [4, 4, 4, 4, 3, 5, 4, 5, 4, 5, 4, 5, 4, 3, 5, 4, 4, 4, 4, 5, 4, 4, 5, 5, 4, 5, 3, 4, 4, 5]
+    },
+    {
+        name: "UXデザイナー",
+        profile: [5, 4, 5, 4, 4, 5, 5, 5, 4, 5, 4, 4, 5, 3, 5, 5, 3, 3, 5, 5, 5, 4, 4, 5, 5, 4, 3, 5, 4, 3]
+    },
+    {
+        name: "人事・採用担当者",
+        profile: [3, 3, 5, 4, 2, 4, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 3, 3, 3, 3, 2, 3]
+    },
+    {
+        name: "ソーシャルメディアマネージャー",
+        profile: [5, 4, 5, 4, 3, 3, 5, 5, 4, 5, 3, 4, 5, 3, 5, 5, 4, 4, 3, 5, 5, 5, 4, 5, 5, 4, 4, 3, 3, 4]
+    },
+    {
+        name: "フィナンシャルアナリスト",
+        profile: [4, 5, 3, 5, 2, 5, 4, 4, 5, 5, 3, 3, 4, 4, 5, 3, 5, 3, 5, 4, 3, 4, 5, 3, 4, 5, 4, 4, 4, 3]
+    },
+    {
+        name: "建築家",
+        profile: [5, 4, 4, 5, 5, 5, 4, 4, 5, 5, 3, 4, 5, 3, 5, 4, 4, 4, 5, 5, 3, 4, 5, 4, 4, 3, 3, 5, 5, 4]
+    },
+    {
+        name: "栄養士・ダイエットコンサルタント",
+        profile: [4, 4, 5, 4, 3, 4, 4, 5, 4, 5, 4, 5, 4, 3, 5, 4, 4, 3, 5, 4, 5, 4, 4, 4, 3, 4, 3, 3, 3, 5]
+    },
+    {
+        name: "ジャーナリスト・報道記者",
+        profile: [4, 3, 5, 3, 3, 4, 4, 5, 4, 5, 3, 5, 5, 3, 5, 5, 5, 4, 4, 5, 4, 5, 4, 5, 4, 4, 3, 3, 3, 4]
+    },
+    {
+        name: "イベントプランナー",
+        profile: [5, 3, 5, 5, 4, 4, 5, 5, 5, 4, 3, 4, 5, 3, 5, 5, 4, 5, 4, 5, 5, 5, 5, 5, 4, 3, 3, 4, 3, 3]
+    },
+    {
+        name: "公務員",
+        profile: [3, 4, 4, 5, 2, 4, 4, 4, 5, 4, 4, 5, 3, 5, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 3, 3, 5, 4, 3, 4]
+    },
+    {
+        name: "不動産営業",
+        profile: [3, 3, 5, 4, 2, 3, 4, 5, 4, 4, 3, 3, 4, 4, 5, 4, 4, 4, 3, 4, 5, 4, 4, 4, 3, 3, 3, 3, 2, 2]
+    },
+    {
+        name: "証券総合職",
+        profile: [4, 5, 4, 5, 2, 5, 4, 4, 5, 5, 3, 3, 5, 4, 5, 4, 5, 4, 4, 4, 4, 5, 5, 4, 4, 5, 5, 4, 3, 3]
+    },
+    {
+        name: "コンサル系総合職",
+        profile: [5, 5, 4, 5, 3, 5, 5, 5, 5, 5, 3, 4, 5, 4, 5, 5, 5, 5, 4, 5, 4, 5, 5, 5, 5, 5, 4, 5, 5, 4]
+    },
+    {
+        name: "人材系総合職",
+        profile: [4, 4, 5, 4, 3, 4, 5, 5, 4, 5, 3, 4, 5, 4, 5, 5, 4, 4, 4, 5, 5, 5, 5, 5, 4, 4, 3, 4, 3, 3]
+    },
+    {
+        name: "農業経営者・スマートファーマー",
+        profile: [4, 4, 3, 5, 3, 4, 3, 3, 5, 4, 4, 5, 4, 3, 5, 5, 4, 5, 4, 4, 3, 4, 5, 3, 5, 4, 3, 5, 4, 5]
+    },
+    {
+        name: "バイオテクノロジー研究者",
+        profile: [5, 5, 3, 4, 2, 5, 4, 4, 4, 5, 3, 5, 5, 3, 5, 4, 4, 3, 5, 5, 3, 4, 4, 4, 5, 5, 4, 4, 5, 4]
+    },
+    {
+        name: "エネルギー管理士・再生可能エネルギー専門家",
+        profile: [4, 5, 3, 5, 2, 5, 4, 4, 5, 5, 3, 5, 4, 4, 5, 4, 4, 4, 5, 5, 3, 4, 5, 4, 5, 5, 4, 5, 5, 5]
+    },
+    {
+        name: "観光・ホスピタリティマネージャー",
+        profile: [4, 3, 5, 5, 3, 4, 5, 5, 5, 4, 3, 4, 4, 4, 5, 5, 4, 5, 4, 5, 5, 5, 4, 5, 4, 3, 3, 4, 3, 4]
+    },
+    {
+        name: "サイバーセキュリティスペシャリスト",
+        profile: [4, 5, 3, 4, 1, 5, 4, 4, 5, 5, 3, 4, 5, 4, 5, 4, 5, 3, 5, 5, 3, 4, 4, 3, 5, 5, 5, 4, 5, 3]
+    },
+    {
+        name: "音楽プロデューサー・作曲家",
+        profile: [5, 3, 4, 3, 5, 4, 4, 4, 4, 5, 4, 3, 5, 3, 5, 5, 4, 4, 4, 5, 4, 5, 3, 4, 4, 3, 3, 4, 4, 3]
+    },
+    {
+        name: "スポーツトレーナー・フィットネスインストラクター",
+        profile: [4, 3, 5, 4, 3, 4, 5, 5, 5, 4, 4, 4, 5, 3, 5, 5, 5, 5, 4, 4, 5, 4, 4, 4, 3, 3, 2, 3, 3, 4]
+    },
+    {
+        name: "国際援助・NGO職員",
+        profile: [4, 3, 5, 4, 3, 4, 5, 5, 4, 5, 3, 5, 5, 3, 5, 5, 5, 4, 4, 5, 5, 5, 4, 5, 4, 4, 3, 4, 3, 5]
+    },
+    {
+        name: "ゲームデザイナー・開発者",
+        profile: [5, 4, 3, 4, 4, 5, 4, 4, 4, 5, 3, 3, 5, 3, 5, 4, 4, 4, 5, 5, 3, 5, 4, 4, 5, 4, 4, 4, 5, 3]
+    },
+    {
+        name: "宇宙工学技術者",
+        profile: [5, 5, 3, 5, 2, 5, 4, 4, 5, 5, 3, 4, 5, 4, 5, 4, 5, 4, 5, 5, 3, 4, 5, 4, 5, 5, 4, 5, 5, 4]
+    }
+    ];
+
+    // 低スコア向けの追加職種
+    const lowScoreJobs = [
+        "レジ係",
+        "清掃員",
+        "倉庫作業員",
+        "配達員",
+        "警備員",
+        "工場ライン作業員",
+        "農作業補助",
+        "駐車場管理人",
+        "ホテル客室係",
+        "ガソリンスタンド店員"
+    ];
+
+    let userProfile = Array(questions.length).fill(0);
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const questionContainer = document.getElementById("question-container");
+        const submitBtn = document.getElementById("submit-btn");
+        const resetBtn = document.getElementById("reset-btn");
+        const resultContainer = document.getElementById("result-container");
+        const radarChart = document.getElementById("radar-chart");
+        const jobRecommendations = document.getElementById("job-recommendations");
+        const additionalInfo = document.getElementById("additional-info");
+        const progressBar = document.getElementById("progress");
+        let chartInstance = null;
+
+        function createQuestionElement(question, index) {
+            const questionElement = document.createElement("div");
+            questionElement.classList.add("question");
+
+            const questionText = document.createElement("p");
+            questionText.textContent = `${index + 1}. ${question.text}`;
+
+            const optionsContainer = document.createElement("div");
+            optionsContainer.classList.add("options");
+
+            for (let i = 1; i <= 5; i++) {
+                const option = document.createElement("button");
+                option.classList.add("option");
+                option.textContent = i;
+                option.setAttribute("aria-label", `選択肢 ${i}`);
+                option.onclick = () => selectOption(index, i, option);
+                option.onkeydown = (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        selectOption(index, i, option);
+                    }
+                };
+                optionsContainer.appendChild(option);
+            }
+
+            questionElement.appendChild(questionText);
+            questionElement.appendChild(optionsContainer);
+            return questionElement;
+        }
+
+        const fragment = document.createDocumentFragment();
+        questions.forEach((question, index) => {
+            const questionElement = createQuestionElement(question, index);
+            fragment.appendChild(questionElement);
+        });
+        questionContainer.appendChild(fragment);
+
+        submitBtn.style.display = "block";
+        submitBtn.onclick = showResult;
+
+        resetBtn.onclick = resetAnswers;
+
+        function selectOption(questionIndex, value, optionElement) {
+            userProfile[questionIndex] = value;
+
+            const options = optionElement.parentNode.children;
+            for (let option of options) {
+                option.classList.remove("selected");
+                option.setAttribute("aria-pressed", "false");
+            }
+            optionElement.classList.add("selected");
+            optionElement.setAttribute("aria-pressed", "true");
+
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const answeredQuestions = userProfile.filter(value => value !== 0).length;
+            const progress = (answeredQuestions / questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressBar.setAttribute("aria-valuenow", progress);
+        }
+
+        // (以下、showResult, resetAnswers, calculateScores, updateRadarChart,  
+        // showJobRecommendations, calculateRecommendations, showAdditionalInfo, 
+        // generatePDF 関数は前のコードとほぼ同じ)
+         function showResult() {
+            resultContainer.style.display = "block";
+
+            const scores = calculateScores();
+            const chartLabels = questions.map(q => q.factor);
+            updateRadarChart(chartLabels, scores);
+            showJobRecommendations(scores);
+            showAdditionalInfo(scores);
+        }
+
+        function resetAnswers() {
+            userProfile.fill(0);
+
+            const options = document.querySelectorAll(".option");
+            options.forEach(option => option.classList.remove("selected"));
+
+            resultContainer.style.display = "none";
+            progressBar.style.width = "0%";
+        }
+
+        function calculateScores() {
+            const scores = Array(questions.length).fill(0);
+            userProfile.forEach((value, index) => {
+                scores[index] = value;
+            });
+            return scores;
+        }
+
+        function updateRadarChart(labels, data) {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = radarChart.getContext("2d");
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '診断結果',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scale: {
+                        ticks: {
+                            beginAtZero: true,
+                            min: 1,
+                            max: 5,
+                            stepSize: 1
+                        }
+                    }
+                }
+            });
+            
+        }
+
+        function showJobRecommendations(scores) {
+            const recommendations = calculateRecommendations(scores);
+            jobRecommendations.innerHTML = "<h3>あなたにおすすめの職業</h3>";
+            recommendations.forEach(job => {
+                const jobElement = document.createElement("p");
+                jobElement.textContent = job;
+                jobRecommendations.appendChild(jobElement);
+            });
+        }
+
+        function calculateRecommendations(scores) {
+            const recommendations = [];
+            const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+
+            if (averageScore < 2.5) {
+                // 低スコアの場合、低スコア向けの職種を推奨
+                for (let i = 0; i < 5; i++) {
+                    recommendations.push(lowScoreJobs[Math.floor(Math.random() * lowScoreJobs.length)]);
+                }
+            } else {
+                careerFields.forEach(field => {
+                    let score = 0;
+                    field.profile.forEach((value, index) => {
+                        score += Math.abs(value - scores[index]);
+                    });
+                    field.score = score;
+                });
+                careerFields.sort((a, b) => a.score - b.score);
+                for (let i = 0; i < 5; i++) {
+                    recommendations.push(careerFields[i].name);
+                }
+            }
+            return recommendations;
+        }
+
+        function showAdditionalInfo(scores) {
+            const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+            let message = "";
+
+            if (averageScore < 2.5) {
+                message = "あなたのスコアは比較的低めです。これは、現時点でのスキルや興味の範囲を示しているかもしれません。しかし、これは固定的なものではありません。新しいスキルを学んだり、興味の幅を広げたりすることで、より多くの職業の選択肢が開かれる可能性があります。継続的な学習と自己開発を心がけることをおすすめします。";
+            } else if (averageScore < 3.5) {
+                message = "あなたのスコアは平均的です。多様な興味とスキルを持っているようです。推奨された職業以外にも、関連する分野や新しい分野にチャレンジすることで、さらに適した職業が見つかるかもしれません。";
+            } else {
+                message = "あなたのスコアは高めです。多くの分野で高い適性を示しています。推奨された職業は、あなたの強みを活かせる可能性が高い分野です。ただし、これらに限定せず、さらに専門性を高めたり、リーダーシップを発揮できる職域を探ることもおすすめです。";
+            }
+
+            additionalInfo.innerHTML = `<h3>追加情報</h3><p>${message}</p>`;
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.text("適職診断結果", 20, 20);
+            const chartCanvas = document.getElementById("radar-chart");
+            const chartImage = chartCanvas.toDataURL("image/png");
+
+            doc.addImage(chartImage, 'PNG', 20, 30, 150, 150);
+
+            const recommendations = calculateRecommendations(calculateScores());
+            let y = 190;
+            doc.text("おすすめの職業:", 20, y);
+            y += 10;
+            recommendations.forEach(job => {
+                doc.text("・" + job, 30, y);
+                y += 10;
+            });
+
+            const additionalInfoText = additionalInfo.textContent;
+            doc.text("追加情報:", 20, y + 10);
+            const splitText = doc.splitTextToSize(additionalInfoText, 170);
+            doc.text(splitText, 20, y + 20);
+
+            doc.save("診断結果.pdf");
+        }
+
+
+        document.getElementById("pdf-btn").addEventListener("click", generatePDF);
+        document.getElementById("print-btn").addEventListener("click", () => window.print());
+    });
+    </script>
+</body>
+</html>
