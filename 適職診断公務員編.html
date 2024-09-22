@@ -12,6 +12,7 @@
             margin: 0;
             padding: 0;
             color: #333;
+            line-height: 1.6;
         }
         .container {
             max-width: 800px;
@@ -21,27 +22,26 @@
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-        h1 {
+        h1, h2, h3 {
             text-align: center;
             color: #2c3e50;
             margin-bottom: 30px;
         }
         .question {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         .question label {
-            display: inline-block;
-            width: 70%;
-            margin-right: 10px;
+            display: block;
+            margin-bottom: 5px;
             font-weight: bold;
             color: #34495e;
         }
         .question select {
-            width: 25%;
-            padding: 5px;
+            width: 100%;
+            padding: 10px;
             border: 1px solid #bdc3c7;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: 16px;
         }
         .result {
             text-align: center;
@@ -70,17 +70,29 @@
         #radarChart {
             margin-top: 30px;
         }
+        #detailSection {
+            margin-top: 30px;
+        }
+        #jobTypeDetail {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #detailContent ul {
+            padding-left: 20px;
+        }
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            .container, .container * {
-                visibility: visible;
+            body {
+                background-color: #fff;
             }
             .container {
-                position: absolute;
-                left: 0;
-                top: 0;
+                box-shadow: none;
+            }
+            #showResultButton, #printButton, .no-print {
+                display: none;
             }
         }
     </style>
@@ -88,12 +100,22 @@
 <body>
     <div class="container">
         <h1>公務員適職診断テスト</h1>
-        <form id="diagnosisForm">
-            <div id="questionContainer"></div>
-            <button type="button" id="showResultButton" onclick="calculateScore()">結果を表示</button>
+        <form id="diagnosisForm" class="no-print">
+            <!-- 質問はJavaScriptで動的に生成されます -->
         </form>
-        <div class="result" id="result"></div>
+        <div id="userResponses" style="display:none;">
+            <h3>あなたの回答:</h3>
+            <ul id="responsesList"></ul>
+        </div>
+        <div class="result" id="result" style="display:none;"></div>
         <canvas id="radarChart" style="display:none;"></canvas>
+        <div id="detailSection" style="display:none;">
+            <h3>あなたに最適な公務員職種の詳細:</h3>
+            <select id="jobTypeDetail" onchange="showJobDetail()">
+                <option value="">選択してください</option>
+            </select>
+            <div id="detailContent"></div>
+        </div>
         <button type="button" id="printButton" onclick="window.print()" style="display:none;">結果を印刷</button>
     </div>
 
@@ -101,19 +123,19 @@
         const questions = [
             { text: "公共の利益を最優先に考えることができますか？", category: "公共性" },
             { text: "法律や規則を遵守することに自信がありますか？", category: "法令順守" },
-            { text: "あなたは責任感がありますか？", category: "責任感" },
-            { text: "あなたは問題解決能力が高いですか？", category: "問題解決力" },
-            { text: "あなたはリーダーシップがありますか？", category: "リーダーシップ" },
-            { text: "あなたは倫理観が高いですか？", category: "倫理観" },
-            { text: "あなたは計画性がありますか？", category: "計画性" },
-            { text: "あなたは協調性がありますか？", category: "協調性" },
-            { text: "あなたは忍耐力がありますか？", category: "忍耐力" },
-            { text: "あなたは法律知識がありますか？", category: "法律知識" },
-            { text: "あなたは事務処理能力がありますか？", category: "事務処理能力" },
-            { text: "あなたはストレス管理ができますか？", category: "ストレス管理" },
-            { text: "あなたは柔軟性がありますか？", category: "柔軟性" },
-            { text: "あなたはフィジカルフィットネスが高いですか？", category: "体力" },
-            { text: "あなたは数学や科学の知識が豊富ですか？", category: "専門知識" },
+            { text: "責任感がありますか？", category: "責任感" },
+            { text: "問題解決能力が高いですか？", category: "問題解決力" },
+            { text: "リーダーシップがありますか？", category: "リーダーシップ" },
+            { text: "倫理観が高いですか？", category: "倫理観" },
+            { text: "計画性がありますか？", category: "計画性" },
+            { text: "協調性がありますか？", category: "協調性" },
+            { text: "忍耐力がありますか？", category: "忍耐力" },
+            { text: "法律知識がありますか？", category: "法律知識" },
+            { text: "事務処理能力がありますか？", category: "事務処理能力" },
+            { text: "ストレス管理ができますか？", category: "ストレス管理" },
+            { text: "柔軟性がありますか？", category: "柔軟性" },
+            { text: "フィジカルフィットネスが高いですか？", category: "体力" },
+            { text: "数学や科学の知識が豊富ですか？", category: "専門知識" },
             { text: "基礎的学力と一般教養がありますか？", category: "一般教養" },
             { text: "SPI対策をしていますか？", category: "試験対策" },
             { text: "文章を読んで内容を理解する能力がありますか？", category: "読解力" },
@@ -121,101 +143,242 @@
             { text: "時事問題に関心を持っていますか？", category: "時事把握" }
         ];
 
-        let chart;
+        const jobTypes = {
+            国家公務員: {
+                weights: {1: 3, 2: 3, 3: 3, 6: 2, 16: 1},
+                description: "国の行政を担当し、政策立案や法律の執行を行います。",
+                details: [
+                    "中央省庁での政策立案",
+                    "国の予算管理",
+                    "外交業務",
+                    "国家プロジェクトの推進",
+                    "法律の執行と監督"
+                ]
+            },
+            地方公務員: {
+                weights: {1: 3, 8: 3, 11: 3, 13: 2, 20: 1},
+                description: "地方自治体で住民サービスの提供や地域の発展に貢献します。",
+                details: [
+                    "地域の行政サービス提供",
+                    "都市計画と開発",
+                    "地域の福祉・教育支援",
+                    "地方税の徴収と管理",
+                    "地域イベントの企画運営"
+                ]
+            },
+            警察官: {
+                weights: {3: 3, 6: 3, 9: 3, 14: 2, 2: 1},
+                description: "社会の秩序を維持し、市民の安全を守ります。",
+                details: [
+                    "犯罪の取り締まりと捜査",
+                    "交通安全の確保",
+                    "地域パトロール",
+                    "緊急事態への対応",
+                    "防犯活動と啓発"
+                ]
+            },
+            消防士: {
+                weights: {4: 3, 9: 3, 14: 3, 12: 2, 8: 1},
+                description: "火災や災害から市民の生命と財産を守ります。",
+                details: [
+                    "火災の消火活動",
+                    "救急救命活動",
+                    "災害時の救助活動",
+                    "防火指導と啓発",
+                    "消防設備の点検と管理"
+                ]
+            },
+            教職員: {
+                weights: {5: 3, 7: 3, 16: 3, 18: 2, 13: 1},
+                description: "次世代を担う子どもたちの教育に携わります。",
+                details: [
+                    "学校での授業運営",
+                    "生徒の指導と支援",
+                    "教育カリキュラムの作成",
+                    "保護者との連携",
+                    "学校行事の企画運営"
+                ]
+            },
+            税務職員: {
+                weights: {10: 3, 11: 3, 19: 3, 2: 2, 4: 1},
+                description: "公平な税制の運用と徴税業務を担当します。",
+                details: [
+                    "税務調査の実施",
+                    "確定申告の受付と審査",
+                    "税制度の広報活動",
+                    "滞納整理と徴収",
+                    "税務相談の対応"
+                ]
+            },
+            裁判所職員: {
+                weights: {2: 3, 10: 3, 18: 3, 6: 2, 11: 1},
+                description: "司法制度を支え、公正な裁判の運営に貢献します。",
+                details: [
+                    "裁判の準備と進行管理",
+                    "法廷での記録作成",
+                    "裁判文書の管理",
+                    "裁判所の運営支援",
+                    "法律相談の受付"
+                ]
+            },
+            自衛官: {
+                weights: {3: 3, 5: 3, 14: 3, 9: 2, 15: 1},
+                description: "国の安全保障と災害救援活動に従事します。",
+                details: [
+                    "国防任務",
+                    "災害救援活動",
+                    "国際平和維持活動",
+                    "訓練と能力向上",
+                    "装備品の管理と運用"
+                ]
+            },
+            福祉職: {
+                weights: {1: 3, 8: 3, 13: 3, 12: 2, 4: 1},
+                description: "社会福祉の向上と地域住民の生活支援を行います。",
+                details: [
+                    "生活保護の相談と支援",
+                    "高齢者・障害者福祉サービスの提供",
+                    "児童福祉の推進",
+                    "地域福祉計画の策定",
+                    "福祉施設の運営管理"
+                ]
+            },
+            環境保全職: {
+                weights: {15: 3, 7: 3, 4: 3, 20: 2, 1: 1},
+                description: "環境保護と持続可能な社会の実現に向けて取り組みます。",
+                details: [
+                    "環境アセスメントの実施",
+                    "環境保護政策の立案",
+                    "公害対策と監視",
+                    "リサイクル推進活動",
+                    "環境教育の実施"
+                ]
+            }
+        };
 
         function generateQuestions() {
-            const container = document.getElementById('questionContainer');
+            const form = document.getElementById('diagnosisForm');
             questions.forEach((q, index) => {
-                container.innerHTML += `
-                    <div class="question">
-                        <label for="q${index}">${q.text}</label>
-                        <select id="q${index}" name="q${index}">
-                            <option value="">選択してください</option>
-                            <option value="5">非常に当てはまる</option>
-                            <option value="4">当てはまる</option>
-                            <option value="3">どちらとも言えない</option>
-                            <option value="2">あまり当てはまらない</option>
-                            <option value="1">まったく当てはまらない</option>
-                        </select>
-                    </div>
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <label for="q${index + 1}">${index + 1}. ${q.text}</label>
+                    <select id="q${index + 1}" required>
+                        <option value="">選択してください</option>
+                        <option value="1">1 (低い)</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5 (高い)</option>
+                    </select>
                 `;
+                form.appendChild(questionDiv);
             });
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.id = 'showResultButton';
+            button.textContent = '結果を表示';
+            button.onclick = calculateScore;
+            form.appendChild(button);
         }
 
         function calculateScore() {
-            const categories = {};
-            let allAnswered = true;
+    const scores = {};
+    const skillScores = {};
+    let allAnswered = true;
+    let countLowScores = 0; // 1または2のスコアのカウント
 
-            questions.forEach((q, i) => {
-                const answer = document.getElementById(`q${i}`).value;
-                if (!answer) {
-                    allAnswered = false;
-                    return;
-                }
-                if (!categories[q.category]) {
-                    categories[q.category] = [];
-                }
-                categories[q.category].push(parseInt(answer));
-            });
+    let responsesHTML = "<ul>";
+    questions.forEach((q, i) => {
+        const value = document.getElementById(`q${i + 1}`).value;
+        if (!value) {
+            allAnswered = false;
+            return;
+        }
+        const numericValue = parseInt(value);
+        skillScores[i + 1] = numericValue;
 
-            if (!allAnswered) {
-                alert('すべての質問に回答してください。');
-                return;
-            }
-
-            const scores = Object.keys(categories).map(category => {
-                const sum = categories[category].reduce((a, b) => a + b, 0);
-                return {
-                    category: category,
-                    score: sum / categories[category].length
-                };
-            });
-
-            const totalScore = scores.reduce((sum, s) => sum + s.score, 0);
-            const averageScore = totalScore / scores.length;
-
-            let resultText = '';
-            if (averageScore >= 4) {
-                resultText = 'あなたは公務員に非常に適しています。推奨職種: 国家公務員、地方公務員、警察官、消防士、自衛官';
-            } else if (averageScore >= 3) {
-                resultText = 'あなたは公務員に適していますが、さらなる努力が必要です。推奨職種: 地方公務員、警察官、消防士';
-            } else {
-                resultText = 'あなたは公務員にはあまり向いていないようです。他の職業を検討してみてください。';
-            }
-
-            document.getElementById('result').innerText = resultText;
-            document.getElementById('showResultButton').style.display = 'none';
-            document.getElementById('printButton').style.display = 'block';
-
-            drawRadarChart(scores);
+        if (numericValue === 1 || numericValue === 2) {
+            countLowScores++; // スコアが1または2の場合にカウント
         }
 
-        function drawRadarChart(scores) {
-            const ctx = document.getElementById('radarChart');
-            ctx.style.display = 'block';
+        responsesHTML += `<li>${q.text}: ${value}</li>`;
+    });
+    responsesHTML += "</ul>";
+    document.getElementById('responsesList').innerHTML = responsesHTML;
+    document.getElementById('userResponses').style.display = 'block';
 
-            const data = {
-                labels: scores.map(s => s.category),
-                datasets: [{
-                    label: '能力スコア',
-                    data: scores.map(s => s.score),
-                    fill: true,
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgb(54, 162, 235)',
-                    pointBackgroundColor: 'rgb(54, 162, 235)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgb(54, 162, 235)'
-                }]
-            };
+    if (!allAnswered) {
+        alert('すべての質問に回答してください。');
+        return;
+    }
 
-            if (chart) {
-                chart.destroy();
-            }
+    for (const [jobType, typeData] of Object.entries(jobTypes)) {
+        let score = 0;
+        let weightSum = 0;
+        for (const [question, weight] of Object.entries(typeData.weights)) {
+            score += skillScores[question] * weight;
+            weightSum += weight;
+        }
+        scores[jobType] = (score / weightSum) * 20;
+    }
 
-            chart = new Chart(ctx, {
+    const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+    let resultHTML = "<h2>あなたに適した公務員職種（上位3つ）:</h2>";
+    for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+        const [jobType, score] = sortedScores[i];
+        resultHTML += `<p>${i + 1}. ${jobType}: ${score.toFixed(1)}点<br>${jobTypes[jobType].description}</p>`;
+    }
+
+    document.getElementById('result').innerHTML = resultHTML;
+    document.getElementById('result').style.display = 'block';
+
+    createRadarChart(skillScores);
+
+    const detailSection = document.getElementById('detailSection');
+    detailSection.style.display = 'block';
+
+    const jobTypeDetail = document.getElementById('jobTypeDetail');
+    jobTypeDetail.innerHTML = '<option value="">職種を選択してください</option>';
+    for (let i = 0; i < 3 && i < sortedScores.length; i++) {
+        const [jobType, score] = sortedScores[i];
+        const option = document.createElement('option');
+        option.value = jobType;
+        option.textContent = `${i + 1}. ${jobType}`;
+        jobTypeDetail.appendChild(option);
+    }
+
+    document.getElementById('printButton').style.display = 'block';
+
+    showJobDetail(sortedScores[0][0]);
+
+    // スコアに基づいて特定の処理を追加
+    if (countLowScores >= 5) {
+        alert('あなたのスコアには注意が必要な低評価が多く含まれています。適職についての判定は、それぞれの能力要素を「もう一段階」引き上げた場合のものと考えましょう。公務員を志望する場合は、努力が必要です。');
+    }
+}
+
+        function createRadarChart(skillScores) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            const labels = questions.map(q => q.category);
+            const data = questions.map((_, index) => skillScores[index + 1]);
+
+            new Chart(ctx, {
                 type: 'radar',
-                data: data,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'あなたのスキル',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
                 options: {
                     elements: {
                         line: {
@@ -233,6 +396,25 @@
                     }
                 }
             });
+
+            document.getElementById('radarChart').style.display = 'block';
+        }
+
+        function showJobDetail(selectedType) {
+            if (!selectedType) {
+                selectedType = document.getElementById('jobTypeDetail').value;
+            }
+            const detailContent = document.getElementById('detailContent');
+            if (selectedType && jobTypes[selectedType].details) {
+                let detailHTML = `<h4>${selectedType}の具体的な仕事内容：</h4><ul>`;
+                for (const detail of jobTypes[selectedType].details) {
+                    detailHTML += `<li>${detail}</li>`;
+                }
+                detailHTML += '</ul>';
+                detailContent.innerHTML = detailHTML;
+            } else {
+                detailContent.innerHTML = '';
+            }
         }
 
         generateQuestions();
